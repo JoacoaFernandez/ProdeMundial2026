@@ -53,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         })
 
-        if (!user || !user.emailVerified) return null
+        if (!user) return null
 
         const passwordMatch = await bcrypt.compare(
           parsed.data.password,

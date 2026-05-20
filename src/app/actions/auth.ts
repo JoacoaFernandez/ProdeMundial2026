@@ -35,21 +35,10 @@ export async function registerAction(
   const token = randomBytes(32).toString('hex')
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
 
-  const user = await db.user.create({
-    data: { name, email, passwordHash },
+  await db.user.create({
+    data: { name, email, passwordHash, emailVerified: new Date() },
     select: { id: true },
   })
-
-  await db.verificationToken.create({
-    data: {
-      identifier: email,
-      token,
-      expires,
-      userId: user.id,
-    },
-  })
-
-  await sendVerificationEmail(email, name, token)
 
   return { ok: true, data: { email } }
 }
