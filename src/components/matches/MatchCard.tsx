@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { getTeamFlag } from '@/lib/team-flags'
+import { getFlagUrl } from '@/lib/team-flags'
 
 type Prediction = {
   homeScore: number
@@ -24,27 +25,47 @@ type MatchCardProps = {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  GROUP: 'Grupo',
+  GROUP: 'Fase de grupos',
   R32: 'Ronda de 32',
-  R16: 'Octavos',
-  QF: 'Cuartos',
+  R16: 'Octavos de final',
+  QF: 'Cuartos de final',
   SF: 'Semifinal',
-  THIRD: '3er puesto',
+  THIRD: 'Tercer puesto',
   FINAL: 'Final',
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  EXACT: 'text-green-600',
-  WINNER_DIFF: 'text-blue-600',
-  WINNER_ONLY: 'text-yellow-600',
-  WRONG: 'text-red-500',
+const CATEGORY_STYLES: Record<string, { bar: string; text: string; label: string }> = {
+  EXACT:       { bar: 'bg-green-500',  text: 'text-green-600',  label: 'Exacto' },
+  WINNER_DIFF: { bar: 'bg-blue-500',   text: 'text-blue-600',   label: '+Diferencia' },
+  WINNER_ONLY: { bar: 'bg-yellow-500', text: 'text-yellow-600', label: 'Ganador' },
+  WRONG:       { bar: 'bg-red-400',    text: 'text-red-500',    label: 'Incorrecto' },
 }
 
-const CATEGORY_BG: Record<string, string> = {
-  EXACT: 'bg-green-50 border-green-200',
-  WINNER_DIFF: 'bg-blue-50 border-blue-200',
-  WINNER_ONLY: 'bg-yellow-50 border-yellow-200',
-  WRONG: 'bg-red-50 border-red-200',
+function TeamFlag({ code, name }: { code: string; name: string }) {
+  const url = getFlagUrl(code, 80)
+  return (
+    <div className="flex flex-col items-center gap-2 w-24">
+      <div className="relative w-14 h-10 rounded overflow-hidden shadow-sm border border-black/10 bg-muted">
+        {url ? (
+          <Image
+            src={url}
+            alt={name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center text-xs text-muted-foreground">
+            {code}
+          </div>
+        )}
+      </div>
+      <div className="text-center">
+        <p className="text-xs font-bold tracking-wide">{code}</p>
+        <p className="text-[10px] text-muted-foreground leading-tight max-w-[80px] truncate">{name}</p>
+      </div>
+    </div>
+  )
 }
 
 export function MatchCard({
@@ -64,95 +85,87 @@ export function MatchCard({
   const isLive = status === 'LIVE'
   const hasPrediction = myPrediction !== null
   const isScored = hasPrediction && myPrediction!.points !== null
+  const cat = isScored && myPrediction?.category ? CATEGORY_STYLES[myPrediction.category] : null
 
   return (
     <Link href={`/matches/${id}`} className="block group">
-      <div className={cn(
-        'rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5',
-        isLive && 'border-green-300 bg-green-50/30',
-        isScored && myPrediction?.category ? CATEGORY_BG[myPrediction.category] : '',
-      )}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
-          <span className="font-medium">{STAGE_LABELS[stage] ?? stage}</span>
-          <div className="flex items-center gap-1.5">
-            {isLive && (
-              <span className="flex items-center gap-1 text-green-600 font-bold animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block" />
-                EN VIVO
-              </span>
-            )}
-            {!isLive && (
-              <span className={cn(
-                'px-2 py-0.5 rounded-full font-medium',
-                isFinished ? 'bg-muted text-muted-foreground' :
-                isLocked ? 'bg-orange-100 text-orange-700' :
-                'bg-blue-100 text-blue-700'
-              )}>
-                {isFinished ? 'Finalizado' :
-                 isLocked ? 'Cerrado' :
-                 kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="rounded-xl border bg-card hover:shadow-lg transition-all duration-200 overflow-hidden">
+        {/* Top bar — live indicator or category color */}
+        <div className={cn(
+          'h-1',
+          isLive ? 'bg-green-500 animate-pulse' :
+          cat ? cat.bar :
+          'bg-transparent'
+        )} />
 
-        {/* Teams */}
-        <div className="flex items-center gap-2">
-          {/* Home team */}
-          <div className="flex-1 flex flex-col items-center gap-1 text-center">
-            <span className="text-3xl leading-none">{getTeamFlag(homeTeam.code)}</span>
-            <span className="text-xs font-bold tracking-wide">{homeTeam.code}</span>
-          </div>
-
-          {/* Score / time */}
-          <div className="flex flex-col items-center min-w-[60px]">
-            {isFinished || isLive ? (
-              <span className="text-2xl font-bold tabular-nums">
-                {homeScore ?? 0}–{awayScore ?? 0}
-              </span>
-            ) : (
-              <>
-                <span className="text-lg font-semibold tabular-nums">
+        <div className="p-4 space-y-4">
+          {/* Stage + date */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{STAGE_LABELS[stage] ?? stage}</span>
+            <div className="flex items-center gap-1.5">
+              {isLive ? (
+                <span className="flex items-center gap-1 font-semibold text-green-600">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  EN VIVO
+                </span>
+              ) : isFinished ? (
+                <span className="text-muted-foreground">Finalizado</span>
+              ) : isLocked ? (
+                <span className="text-orange-600 font-medium">Cerrado</span>
+              ) : (
+                <span>
+                  {kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {' · '}
                   {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                 </span>
-                <span className="text-xs text-muted-foreground">hs</span>
-              </>
+              )}
+            </div>
+          </div>
+
+          {/* Teams + score */}
+          <div className="flex items-center justify-between gap-2">
+            <TeamFlag code={homeTeam.code} name={homeTeam.name} />
+
+            <div className="flex flex-col items-center gap-1 flex-1">
+              {isFinished || isLive ? (
+                <span className="text-3xl font-bold tabular-nums tracking-tight">
+                  {homeScore ?? 0} – {awayScore ?? 0}
+                </span>
+              ) : (
+                <span className="text-2xl font-bold text-muted-foreground tracking-tight">vs</span>
+              )}
+            </div>
+
+            <TeamFlag code={awayTeam.code} name={awayTeam.name} />
+          </div>
+
+          {/* Prediction footer */}
+          <div className="border-t pt-3 min-h-[28px]">
+            {isScored && cat ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn('text-xs font-semibold', cat.text)}>{cat.label}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    ({myPrediction!.homeScore}–{myPrediction!.awayScore})
+                  </span>
+                </div>
+                <span className={cn('text-sm font-bold', cat.text)}>+{myPrediction!.points} pts</span>
+              </div>
+            ) : hasPrediction ? (
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Mi pronóstico</span>
+                <span className="text-xs font-mono font-semibold">
+                  {myPrediction!.homeScore} – {myPrediction!.awayScore}
+                </span>
+              </div>
+            ) : !isLocked && !isFinished ? (
+              <p className="text-xs text-muted-foreground group-hover:text-primary transition-colors text-center">
+                Tocá para cargar tu pronóstico →
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center">Sin pronóstico</p>
             )}
           </div>
-
-          {/* Away team */}
-          <div className="flex-1 flex flex-col items-center gap-1 text-center">
-            <span className="text-3xl leading-none">{getTeamFlag(awayTeam.code)}</span>
-            <span className="text-xs font-bold tracking-wide">{awayTeam.code}</span>
-          </div>
-        </div>
-
-        {/* Prediction row */}
-        <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs min-h-[20px]">
-          {isScored && myPrediction?.category ? (
-            <>
-              <span className="text-muted-foreground font-mono">
-                {myPrediction.homeScore}–{myPrediction.awayScore}
-              </span>
-              <span className={cn('font-bold', CATEGORY_COLORS[myPrediction.category])}>
-                +{myPrediction.points} pts
-              </span>
-            </>
-          ) : hasPrediction ? (
-            <>
-              <span className="text-muted-foreground">Mi pronóstico</span>
-              <span className="font-mono font-semibold">
-                {myPrediction!.homeScore}–{myPrediction!.awayScore}
-              </span>
-            </>
-          ) : !isLocked && !isFinished ? (
-            <span className="text-muted-foreground group-hover:text-foreground transition-colors">
-              Cargá tu pronóstico →
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Sin pronóstico</span>
-          )}
         </div>
       </div>
     </Link>
