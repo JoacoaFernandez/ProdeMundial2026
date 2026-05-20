@@ -10,7 +10,7 @@ export async function sendVerificationEmail(
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${token}`
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? 'PRODE 2026 <noreply@example.com>',
+    from: 'PRODE 2026 <onboarding@resend.dev>',
     to: email,
     subject: 'Verificá tu cuenta — PRODE Mundial 2026',
     html: `
