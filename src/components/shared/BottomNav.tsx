@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation'
 const NAV_ITEMS = [
   { href: '/',        label: 'Inicio',    icon: HomeIcon },
   { href: '/matches', label: 'Partidos',  icon: CalendarIcon },
+  { href: '/ranking', label: 'Ranking',   icon: TrophyIcon },
   { href: '/rooms',   label: 'Salas',     icon: UsersIcon },
-  { href: '/history', label: 'Historial', icon: ClockIcon },
   { href: '/profile', label: 'Perfil',    icon: UserIcon },
 ]
 
@@ -79,6 +79,18 @@ function UserIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
+function TrophyIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9H4a2 2 0 0 1-2-2V5h4" />
+      <path d="M18 9h2a2 2 0 0 0 2-2V5h-4" />
+      <path d="M12 17v4" />
+      <path d="M8 21h8" />
+      <path d="M6 5v4a6 6 0 0 0 12 0V5H6z" />
     </svg>
   )
 }

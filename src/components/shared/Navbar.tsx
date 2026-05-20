@@ -32,6 +32,9 @@ export default function Navbar({ user }: NavbarProps) {
           <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
             Salas
           </Link>
+          <Link href="/ranking" className="text-sm text-muted-foreground hover:text-foreground">
+            Ranking
+          </Link>
           {user.role === 'ADMIN' && (
             <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
               Admin
