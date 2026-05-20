@@ -1,8 +1,7 @@
-const BASE_URL = 'https://api-football-v1.p.rapidapi.com/v3'
+const BASE_URL = 'https://api.football-data.org/v4'
 
 const headers = {
-  'X-RapidAPI-Key': process.env.RAPIDAPI_KEY ?? '',
-  'X-RapidAPI-Host': process.env.RAPIDAPI_HOST ?? 'api-football-v1.p.rapidapi.com',
+  'X-Auth-Token': process.env.RAPIDAPI_KEY ?? '',
 }
 
 export type ApiFixture = {
@@ -13,42 +12,82 @@ export type ApiFixture = {
     status: { short: string }
   }
   teams: {
-    home: { id: number; name: string }
-    away: { id: number; name: string }
+    home: { id: number; name: string; code?: string }
+    away: { id: number; name: string; code?: string }
   }
   goals: { home: number | null; away: number | null }
-  league: { round: string }
+  league: { round: string; group?: string | null }
 }
 
 export async function fetchFixturesByLeague(leagueId: string, season: number): Promise<ApiFixture[]> {
-  if (!process.env.RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY no configurada')
+  if (!process.env.RAPIDAPI_KEY) throw new Error('API Key no configurada (usando variable RAPIDAPI_KEY)')
 
-  const res = await fetch(`${BASE_URL}/fixtures?league=${leagueId}&season=${season}`, { headers })
-  if (!res.ok) throw new Error(`API-Football error: ${res.status}`)
+  // API-Sports usaba '1' para el Mundial. Football-Data usa '2000'
+  const compId = leagueId === '1' ? '2000' : leagueId;
+
+  const res = await fetch(`${BASE_URL}/competitions/${compId}/matches?season=${season}`, { headers })
+  if (!res.ok) throw new Error(`Football-Data API error: ${res.status}`)
 
   const data = await res.json()
-  return data.response as ApiFixture[]
+  return data.matches.map(mapFdMatchToApiFixture)
 }
 
 export async function fetchLiveFixtures(leagueId: string): Promise<ApiFixture[]> {
-  if (!process.env.RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY no configurada')
+  if (!process.env.RAPIDAPI_KEY) throw new Error('API Key no configurada')
 
-  const res = await fetch(`${BASE_URL}/fixtures?league=${leagueId}&live=all`, { headers })
-  if (!res.ok) throw new Error(`API-Football error: ${res.status}`)
+  const compId = leagueId === '1' ? '2000' : leagueId;
+  const res = await fetch(`${BASE_URL}/competitions/${compId}/matches?status=IN_PLAY,PAUSED`, { headers })
+  if (!res.ok) throw new Error(`Football-Data API error: ${res.status}`)
 
   const data = await res.json()
-  return data.response as ApiFixture[]
+  return data.matches.map(mapFdMatchToApiFixture)
 }
 
 export async function fetchTodayFixtures(leagueId: string): Promise<ApiFixture[]> {
-  if (!process.env.RAPIDAPI_KEY) throw new Error('RAPIDAPI_KEY no configurada')
+  if (!process.env.RAPIDAPI_KEY) throw new Error('API Key no configurada')
 
+  const compId = leagueId === '1' ? '2000' : leagueId;
   const today = new Date().toISOString().slice(0, 10)
-  const res = await fetch(`${BASE_URL}/fixtures?league=${leagueId}&date=${today}`, { headers })
-  if (!res.ok) throw new Error(`API-Football error: ${res.status}`)
+  const res = await fetch(`${BASE_URL}/competitions/${compId}/matches?dateFrom=${today}&dateTo=${today}`, { headers })
+  if (!res.ok) throw new Error(`Football-Data API error: ${res.status}`)
 
   const data = await res.json()
-  return data.response as ApiFixture[]
+  return data.matches.map(mapFdMatchToApiFixture)
+}
+
+function mapFdMatchToApiFixture(m: any): ApiFixture {
+  return {
+    fixture: {
+      id: m.id,
+      date: m.utcDate,
+      venue: { name: null },
+      status: { short: mapFdStatusToShort(m.status) }
+    },
+    teams: {
+      home: { id: m.homeTeam?.id ?? 0, name: m.homeTeam?.name ?? 'TBD', code: m.homeTeam?.tla },
+      away: { id: m.awayTeam?.id ?? 0, name: m.awayTeam?.name ?? 'TBD', code: m.awayTeam?.tla }
+    },
+    goals: {
+      home: m.score?.fullTime?.home ?? null,
+      away: m.score?.fullTime?.away ?? null
+    },
+    league: {
+      round: m.stage,
+      group: m.group ? m.group.replace('GROUP_', '') : null
+    }
+  }
+}
+
+function mapFdStatusToShort(status: string): string {
+  switch (status) {
+    case 'IN_PLAY':
+    case 'PAUSED': return 'LIVE'
+    case 'FINISHED': return 'FT'
+    case 'POSTPONED': return 'PST'
+    case 'CANCELLED': return 'CANC'
+    case 'SUSPENDED': return 'ABD'
+    default: return 'NS'
+  }
 }
 
 export function mapStatusToMatchStatus(short: string): 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'CANCELLED' | 'POSTPONED' {
@@ -60,13 +99,13 @@ export function mapStatusToMatchStatus(short: string): 'SCHEDULED' | 'LIVE' | 'F
 }
 
 export function mapRoundToStage(round: string): 'GROUP' | 'R32' | 'R16' | 'QF' | 'SF' | 'THIRD' | 'FINAL' {
-  const r = round.toLowerCase()
-  if (r.includes('group')) return 'GROUP'
-  if (r.includes('round of 64') || r.includes('round of 32')) return 'R32'
-  if (r.includes('round of 16')) return 'R16'
-  if (r.includes('quarter')) return 'QF'
-  if (r.includes('semi')) return 'SF'
-  if (r.includes('3rd') || r.includes('third')) return 'THIRD'
-  if (r.includes('final')) return 'FINAL'
+  const r = round?.toUpperCase() || ''
+  if (r.includes('GROUP')) return 'GROUP'
+  if (r.includes('LAST_32')) return 'R32'
+  if (r.includes('LAST_16')) return 'R16'
+  if (r.includes('QUARTER')) return 'QF'
+  if (r.includes('SEMI')) return 'SF'
+  if (r.includes('THIRD_PLACE')) return 'THIRD'
+  if (r.includes('FINAL')) return 'FINAL'
   return 'GROUP'
 }
