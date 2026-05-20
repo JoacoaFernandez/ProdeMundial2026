@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { getTeamFlag } from '@/lib/team-flags'
 
 type Prediction = {
   homeScore: number
@@ -33,19 +33,18 @@ const STAGE_LABELS: Record<string, string> = {
   FINAL: 'Final',
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  SCHEDULED: 'bg-blue-100 text-blue-700',
-  LIVE: 'bg-green-100 text-green-700',
-  FINISHED: 'bg-gray-100 text-gray-600',
-  CANCELLED: 'bg-red-100 text-red-600',
-  POSTPONED: 'bg-yellow-100 text-yellow-700',
-}
-
 const CATEGORY_COLORS: Record<string, string> = {
   EXACT: 'text-green-600',
   WINNER_DIFF: 'text-blue-600',
   WINNER_ONLY: 'text-yellow-600',
   WRONG: 'text-red-500',
+}
+
+const CATEGORY_BG: Record<string, string> = {
+  EXACT: 'bg-green-50 border-green-200',
+  WINNER_DIFF: 'bg-blue-50 border-blue-200',
+  WINNER_ONLY: 'bg-yellow-50 border-yellow-200',
+  WRONG: 'bg-red-50 border-red-200',
 }
 
 export function MatchCard({
@@ -63,72 +62,98 @@ export function MatchCard({
   const kickoffDate = new Date(kickoff)
   const isFinished = status === 'FINISHED'
   const isLive = status === 'LIVE'
+  const hasPrediction = myPrediction !== null
+  const isScored = hasPrediction && myPrediction!.points !== null
 
   return (
-    <Link href={`/matches/${id}`}>
-      <div className="rounded-lg border p-4 hover:shadow-md transition-shadow cursor-pointer">
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground">{STAGE_LABELS[stage] ?? stage}</span>
-          <div className="flex items-center gap-2">
-            {isLive && <span className="text-xs font-bold text-green-600 animate-pulse">● EN VIVO</span>}
-            <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[status])}>
-              {isFinished
-                ? 'Finalizado'
-                : isLive
-                  ? 'En juego'
-                  : isLocked
-                    ? 'Cerrado'
-                    : kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </span>
+    <Link href={`/matches/${id}`} className="block group">
+      <div className={cn(
+        'rounded-xl border p-4 transition-all hover:shadow-md hover:-translate-y-0.5',
+        isLive && 'border-green-300 bg-green-50/30',
+        isScored && myPrediction?.category ? CATEGORY_BG[myPrediction.category] : '',
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3 text-xs text-muted-foreground">
+          <span className="font-medium">{STAGE_LABELS[stage] ?? stage}</span>
+          <div className="flex items-center gap-1.5">
+            {isLive && (
+              <span className="flex items-center gap-1 text-green-600 font-bold animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-600 inline-block" />
+                EN VIVO
+              </span>
+            )}
+            {!isLive && (
+              <span className={cn(
+                'px-2 py-0.5 rounded-full font-medium',
+                isFinished ? 'bg-muted text-muted-foreground' :
+                isLocked ? 'bg-orange-100 text-orange-700' :
+                'bg-blue-100 text-blue-700'
+              )}>
+                {isFinished ? 'Finalizado' :
+                 isLocked ? 'Cerrado' :
+                 kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Teams and score */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 text-right">
-            <p className="font-semibold text-sm">{homeTeam.name}</p>
-            <p className="text-xs text-muted-foreground">{homeTeam.code}</p>
+        {/* Teams */}
+        <div className="flex items-center gap-2">
+          {/* Home team */}
+          <div className="flex-1 flex flex-col items-center gap-1 text-center">
+            <span className="text-3xl leading-none">{getTeamFlag(homeTeam.code)}</span>
+            <span className="text-xs font-bold tracking-wide">{homeTeam.code}</span>
           </div>
 
-          <div className="text-center min-w-[64px]">
+          {/* Score / time */}
+          <div className="flex flex-col items-center min-w-[60px]">
             {isFinished || isLive ? (
-              <span className="text-xl font-bold tabular-nums">
-                {homeScore ?? 0} – {awayScore ?? 0}
+              <span className="text-2xl font-bold tabular-nums">
+                {homeScore ?? 0}–{awayScore ?? 0}
               </span>
             ) : (
-              <div className="text-sm text-muted-foreground">
-                {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-              </div>
+              <>
+                <span className="text-lg font-semibold tabular-nums">
+                  {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <span className="text-xs text-muted-foreground">hs</span>
+              </>
             )}
           </div>
 
-          <div className="flex-1">
-            <p className="font-semibold text-sm">{awayTeam.name}</p>
-            <p className="text-xs text-muted-foreground">{awayTeam.code}</p>
+          {/* Away team */}
+          <div className="flex-1 flex flex-col items-center gap-1 text-center">
+            <span className="text-3xl leading-none">{getTeamFlag(awayTeam.code)}</span>
+            <span className="text-xs font-bold tracking-wide">{awayTeam.code}</span>
           </div>
         </div>
 
         {/* Prediction row */}
-        {myPrediction ? (
-          <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">
-              Mi pronóstico:{' '}
-              <span className="font-mono font-semibold">
-                {myPrediction.homeScore} – {myPrediction.awayScore}
+        <div className="mt-3 pt-3 border-t flex items-center justify-between text-xs min-h-[20px]">
+          {isScored && myPrediction?.category ? (
+            <>
+              <span className="text-muted-foreground font-mono">
+                {myPrediction.homeScore}–{myPrediction.awayScore}
               </span>
-            </span>
-            {myPrediction.points !== null && myPrediction.category ? (
-              <span className={cn('font-semibold', CATEGORY_COLORS[myPrediction.category])}>
+              <span className={cn('font-bold', CATEGORY_COLORS[myPrediction.category])}>
                 +{myPrediction.points} pts
               </span>
-            ) : null}
-          </div>
-        ) : !isLocked && !isFinished ? (
-          <div className="mt-3 pt-3 border-t">
-            <span className="text-xs text-muted-foreground">Sin pronóstico — hacé click para cargar</span>
-          </div>
-        ) : null}
+            </>
+          ) : hasPrediction ? (
+            <>
+              <span className="text-muted-foreground">Mi pronóstico</span>
+              <span className="font-mono font-semibold">
+                {myPrediction!.homeScore}–{myPrediction!.awayScore}
+              </span>
+            </>
+          ) : !isLocked && !isFinished ? (
+            <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+              Cargá tu pronóstico →
+            </span>
+          ) : (
+            <span className="text-muted-foreground">Sin pronóstico</span>
+          )}
+        </div>
       </div>
     </Link>
   )
