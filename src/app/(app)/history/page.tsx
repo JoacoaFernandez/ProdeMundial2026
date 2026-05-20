@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
+import { getFlagUrl } from '@/lib/team-flags'
 
 const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Grupos',
@@ -73,6 +75,11 @@ export default async function HistoryPage() {
                 {/* Teams + result */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 text-sm font-medium">
+                    {getFlagUrl(match.homeTeam.code) && (
+                      <div className="relative w-6 h-4 rounded-sm overflow-hidden border border-black/10 shrink-0">
+                        <Image src={getFlagUrl(match.homeTeam.code, 40)} alt={match.homeTeam.code} fill className="object-cover" unoptimized />
+                      </div>
+                    )}
                     <span>{match.homeTeam.code}</span>
                     {isFinished ? (
                       <span className="text-muted-foreground tabular-nums">
@@ -82,6 +89,11 @@ export default async function HistoryPage() {
                       <span className="text-muted-foreground">vs</span>
                     )}
                     <span>{match.awayTeam.code}</span>
+                    {getFlagUrl(match.awayTeam.code) && (
+                      <div className="relative w-6 h-4 rounded-sm overflow-hidden border border-black/10 shrink-0">
+                        <Image src={getFlagUrl(match.awayTeam.code, 40)} alt={match.awayTeam.code} fill className="object-cover" unoptimized />
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs text-muted-foreground">

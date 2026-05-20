@@ -2,9 +2,11 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PredictionForm } from '@/components/matches/PredictionForm'
+import { getFlagUrl } from '@/lib/team-flags'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -76,9 +78,14 @@ export default async function MatchDetailPage({ params }: Props) {
 
         {/* Teams */}
         <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 text-center">
-            <p className="text-2xl font-bold">{match.homeTeam.code}</p>
-            <p className="text-sm text-muted-foreground">{match.homeTeam.name}</p>
+          <div className="flex-1 flex flex-col items-center gap-2">
+            <div className="relative w-16 h-11 rounded overflow-hidden shadow-sm border border-black/10 bg-muted">
+              {getFlagUrl(match.homeTeam.code) && (
+                <Image src={getFlagUrl(match.homeTeam.code, 80)} alt={match.homeTeam.name} fill className="object-cover" unoptimized />
+              )}
+            </div>
+            <p className="text-lg font-bold">{match.homeTeam.code}</p>
+            <p className="text-xs text-muted-foreground text-center">{match.homeTeam.name}</p>
           </div>
 
           {isFinished || isLive ? (
@@ -102,9 +109,14 @@ export default async function MatchDetailPage({ params }: Props) {
             </div>
           )}
 
-          <div className="flex-1 text-center">
-            <p className="text-2xl font-bold">{match.awayTeam.code}</p>
-            <p className="text-sm text-muted-foreground">{match.awayTeam.name}</p>
+          <div className="flex-1 flex flex-col items-center gap-2">
+            <div className="relative w-16 h-11 rounded overflow-hidden shadow-sm border border-black/10 bg-muted">
+              {getFlagUrl(match.awayTeam.code) && (
+                <Image src={getFlagUrl(match.awayTeam.code, 80)} alt={match.awayTeam.name} fill className="object-cover" unoptimized />
+              )}
+            </div>
+            <p className="text-lg font-bold">{match.awayTeam.code}</p>
+            <p className="text-xs text-muted-foreground text-center">{match.awayTeam.name}</p>
           </div>
         </div>
 
