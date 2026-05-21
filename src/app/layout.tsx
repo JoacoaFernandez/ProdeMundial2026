@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Anybody, Geist, Geist_Mono } from 'next/font/google'
-import { ServiceWorkerRegister } from '@/components/shared/ServiceWorkerRegister'
 import './globals.css'
 
 const geistSans = Geist({
@@ -42,7 +41,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         {children}
-        <ServiceWorkerRegister />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}` }} />
       </body>
     </html>
   )
