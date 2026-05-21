@@ -1,17 +1,35 @@
 {
   "name": "Prode Mundial 2026",
   "short_name": "Prode 2026",
-  "description": "Pronosticá los partidos del Mundial FIFA 2026 con tus amigos",
+  "description": "Pronostica los partidos del Mundial FIFA 2026 con tus amigos",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#00170f",
   "theme_color": "#00170f",
   "orientation": "portrait-primary",
-  "categories": ["sports", "entertainment"],
+  "categories": [
+    "sports",
+    "entertainment"
+  ],
   "icons": [
-    { "src": "/prode.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/prode.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/prode.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/prode.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/prode.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/prode.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
