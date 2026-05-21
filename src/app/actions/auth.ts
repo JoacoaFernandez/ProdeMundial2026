@@ -33,12 +33,22 @@ export async function registerAction(
 
   const passwordHash = await bcrypt.hash(password, 12)
   const token = randomBytes(32).toString('hex')
-  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
-  await db.user.create({
-    data: { name, email, passwordHash, emailVerified: new Date() },
+  const user = await db.user.create({
+    data: { name, email, passwordHash, emailVerified: null },
     select: { id: true },
   })
+
+  await db.verificationToken.create({
+    data: { identifier: email, token, expires, userId: user.id },
+  })
+
+  try {
+    await sendVerificationEmail(email, name, token)
+  } catch {
+    // Email falla silenciosamente — el token ya está guardado
+  }
 
   return { ok: true, data: { email } }
 }
