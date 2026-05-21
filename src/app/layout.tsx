@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Anybody, Geist, Geist_Mono } from 'next/font/google'
+import { ServiceWorkerRegister } from '@/components/shared/ServiceWorkerRegister'
 import './globals.css'
 
 const geistSans = Geist({
@@ -27,6 +28,10 @@ export const metadata: Metadata = {
     title: 'Prode 2026',
   },
   icons: {
+    icon: [
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
     apple: '/apple-touch-icon.png',
   },
 }
@@ -40,7 +45,7 @@ export default function RootLayout({
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} ${anybody.variable} dark h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
-        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}` }} />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )
