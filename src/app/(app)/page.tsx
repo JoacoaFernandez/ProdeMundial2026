@@ -8,7 +8,7 @@ import { Plus, Trophy, Target } from 'lucide-react'
 export default async function DashboardPage() {
   const session = await auth()
 
-  const [myRooms, myPredictionCount, myGlobalScore] = await Promise.all([
+  const [myRooms, myPredictionCount, myGlobalScore, userRow] = await Promise.all([
     db.roomMember.findMany({
       where: { userId: session!.user.id, status: 'APPROVED' },
       include: {
@@ -27,6 +27,10 @@ export default async function DashboardPage() {
       },
       select: { totalScore: true, exactCount: true },
     }),
+    db.user.findUnique({
+      where: { id: session!.user.id },
+      select: { name: true },
+    }),
   ])
 
   const privateRooms = myRooms.filter((m) => m.room.code !== 'GLOBAL')
@@ -35,7 +39,7 @@ export default async function DashboardPage() {
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">¡Hola, {session!.user.name?.split(' ')[0]}!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">¡Hola, {(userRow?.name ?? session!.user.name)?.split(' ')[0]}!</h1>
         <p className="text-muted-foreground text-sm">PRODE Mundial FIFA 2026</p>
       </div>
 
