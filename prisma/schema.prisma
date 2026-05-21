@@ -101,6 +101,8 @@ model Match {
   matchday    Int?
   predictions Prediction[]
 
+  notifiedAt       DateTime? // set when pre-match push was sent
+
   // Bracket tracking for knockout rounds
   bracketSlot      String? @unique // e.g. "R32_1", "R16_1", "QF_1", "SF_1", "THIRD", "FINAL"
   homeSlotLabel    String? // e.g. "1° Grupo A"
