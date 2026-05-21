@@ -60,7 +60,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold">Bienvenido</h1>
+          <h1 className="text-4xl font-bold">Bienvenido a<br />Prode Mundial 2026</h1>
           <p className="mt-2 text-muted-foreground">Inicia sesión para continuar</p>
         </div>
 
@@ -103,12 +103,6 @@ function LoginForm() {
             )}
           </div>
 
-          <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
-
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
           <button
@@ -135,14 +129,7 @@ function LoginForm() {
           <GoogleIcon />
         </button>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Al iniciar sesión, aceptás nuestros{' '}
-          <Link href="/terms" className="underline hover:text-foreground">Términos y Condiciones</Link>
-          {' '}y la{' '}
-          <Link href="/privacy" className="underline hover:text-foreground">Política de Privacidad</Link>
-        </p>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           ¿No tenés cuenta?{' '}
           <Link href="/register" className="font-semibold text-primary hover:underline">
             Registrarse

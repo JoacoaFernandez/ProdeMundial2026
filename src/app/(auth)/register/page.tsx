@@ -113,14 +113,7 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Al registrarte, aceptás nuestros{' '}
-          <Link href="/terms" className="underline hover:text-foreground">Términos y Condiciones</Link>
-          {' '}y la{' '}
-          <Link href="/privacy" className="underline hover:text-foreground">Política de Privacidad</Link>
-        </p>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           ¿Ya tenés cuenta?{' '}
           <Link href="/login" className="font-semibold text-primary hover:underline">
             Iniciá sesión
