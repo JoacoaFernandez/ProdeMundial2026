@@ -32,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} ${anybody.variable} dark h-full antialiased`}>
       <head>
+        <meta name="google-adsense-account" content="ca-pub-7626133622972705" />
         <link rel="icon" type="image/png" href="/favicon-32.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#00170f" />
