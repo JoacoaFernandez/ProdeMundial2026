@@ -1,5 +1,7 @@
 import NextAuth, { type DefaultSession } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import Google from 'next-auth/providers/google'
+import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { db } from './db'
 import { LoginSchema } from './validations/auth'
@@ -26,12 +28,18 @@ declare module '@auth/core/jwt' {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
     verifyRequest: '/verify',
   },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
+    }),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -54,6 +62,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         })
 
         if (!user) return null
+        if (!user.passwordHash) return null
         if (!user.emailVerified) return null
 
         const passwordMatch = await bcrypt.compare(
@@ -72,10 +81,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string
         token.role = user.role
+      }
+      // OAuth users may not have role in the token yet — fetch from DB
+      if (token.id && !token.role) {
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id },
+          select: { role: true },
+        })
+        if (dbUser) token.role = dbUser.role
       }
       return token
     },
