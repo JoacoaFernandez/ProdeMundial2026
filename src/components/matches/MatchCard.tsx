@@ -125,9 +125,9 @@ export function MatchCard({
                 <span className="text-orange-600 font-medium">Cerrado</span>
               ) : (
                 <span>
-                  {kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}
                   {' · '}
-                  {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
                 </span>
               )}
             </div>

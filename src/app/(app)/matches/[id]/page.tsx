@@ -106,13 +106,14 @@ export default async function MatchDetailPage({ params }: Props) {
           ) : (
             <div className="text-center">
               <p className="text-lg font-semibold">
-                {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
               </p>
               <p className="text-sm text-muted-foreground">
                 {new Date(match.kickoff).toLocaleDateString('es-AR', {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
+                  timeZone: 'America/Argentina/Buenos_Aires',
                 })}
               </p>
             </div>
