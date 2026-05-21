@@ -6,6 +6,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Leaderboard } from '@/components/rooms/Leaderboard'
 import { MatchdayPredictions } from '@/components/rooms/MatchdayPredictions'
+import { ShareRoomButton } from '@/components/rooms/ShareRoomButton'
 
 type Props = { params: Promise<{ code: string }> }
 
@@ -100,11 +101,14 @@ export default async function RoomPage({ params }: Props) {
             Dueño: {room.owner.name} · {room.members.length} miembro{room.members.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {isOwner && (
-          <Link href={`/rooms/${code}/settings`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-            Configuración
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <ShareRoomButton code={room.code} roomName={room.name} />
+          {isOwner && (
+            <Link href={`/rooms/${code}/settings`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              Configuración
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* My position */}

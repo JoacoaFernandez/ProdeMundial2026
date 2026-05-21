@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { ChangeRoleButton } from './ChangeRoleButton'
 
 export default async function AdminUserDetailPage({
   params,
@@ -62,9 +63,12 @@ export default async function AdminUserDetailPage({
         <Link href="/admin/users" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-5" />
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold">{user.name}</h1>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+        <div className="flex-1 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{user.name}</h1>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+          <ChangeRoleButton userId={user.id} currentRole={user.role} />
         </div>
       </div>
 

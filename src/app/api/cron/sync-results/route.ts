@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { fetchTodayFixtures, mapStatusToMatchStatus } from '@/lib/football-api'
 import { calculatePoints } from '@/lib/scoring'
+import { sendPushToUser } from '@/lib/push'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -29,6 +30,10 @@ export async function GET(request: Request) {
 
     const match = await db.match.findUnique({
       where: { externalId: String(f.fixture.id) },
+      include: {
+        homeTeam: { select: { code: true } },
+        awayTeam: { select: { code: true } },
+      },
     })
 
     if (!match) continue
@@ -72,6 +77,10 @@ export async function GET(request: Request) {
                 ...(category === 'EXACT' && prev === 0 ? { exactCount: { increment: 1 } } : {}),
               },
             })
+
+            const matchLabel = `${match.homeTeam?.code ?? '?'} ${homeScore}-${awayScore} ${match.awayTeam?.code ?? '?'}`
+            const emoji = category === 'EXACT' ? '🎯' : category === 'WINNER_DIFF' ? '✅' : category === 'WINNER_ONLY' ? '👍' : '❌'
+            sendPushToUser(pred.userId, `${emoji} +${points} pts`, matchLabel).catch(() => {})
           }
         }
 

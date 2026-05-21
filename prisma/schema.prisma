@@ -64,6 +64,7 @@ model User {
   accounts            Account[]
   verificationTokens  VerificationToken[]
   passwordResetTokens PasswordResetToken[]
+  pushSubscriptions   PushSubscription[]
 
   @@index([email])
 }
@@ -180,6 +181,17 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id       String @id @default(cuid())
+  userId   String
+  endpoint String @unique
+  p256dh   String
+  auth     String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model PasswordResetToken {

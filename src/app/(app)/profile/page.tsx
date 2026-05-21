@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
 import { TIMEZONES } from '@/lib/timezones'
+import { PushNotificationToggle } from '@/components/shared/PushNotificationToggle'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -61,6 +62,8 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Mi perfil</h1>
+
+      <PushNotificationToggle />
 
       {user.role === 'ADMIN' && (
         <Link
