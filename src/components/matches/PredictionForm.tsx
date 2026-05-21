@@ -23,21 +23,21 @@ function ScoreSelector({
   onChange: (v: number) => void
 }) {
   return (
-    <div className="flex-1 flex flex-col items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground text-center leading-tight">{label}</span>
-      <div className="flex items-center gap-3">
+    <div className="flex-1 min-w-0 flex flex-col items-center gap-2">
+      <span className="text-sm font-medium text-muted-foreground text-center leading-tight truncate w-full text-center">{label}</span>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => onChange(Math.max(0, value - 1))}
-          className="w-10 h-10 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95"
+          className="w-9 h-9 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95 shrink-0"
         >
           −
         </button>
-        <span className="text-4xl font-bold tabular-nums w-10 text-center">{value}</span>
+        <span className="text-4xl font-bold tabular-nums w-8 text-center shrink-0">{value}</span>
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="w-10 h-10 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95"
+          className="w-9 h-9 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95 shrink-0"
         >
           +
         </button>

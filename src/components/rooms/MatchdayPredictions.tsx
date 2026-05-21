@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 type Member = { userId: string; name: string }
@@ -71,7 +72,7 @@ export function MatchdayPredictions({ matches, members, myUserId }: Props) {
           return (
             <div key={match.id} className="rounded-lg border overflow-hidden">
               {/* Match header */}
-              <div className="bg-muted/40 px-4 py-2 flex items-center justify-between">
+              <Link href={`/matches/${match.id}`} className="block bg-muted/40 px-4 py-2 flex items-center justify-between hover:bg-muted/60 transition-colors">
                 <span className="text-sm font-semibold">
                   {match.homeTeam.code} vs {match.awayTeam.code}
                 </span>
@@ -88,7 +89,7 @@ export function MatchdayPredictions({ matches, members, myUserId }: Props) {
                     </span>
                   )}
                 </div>
-              </div>
+              </Link>
 
               {/* Member predictions */}
               <div className="divide-y divide-border/50">
