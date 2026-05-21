@@ -48,7 +48,9 @@ export default async function ProfilePage() {
     })
 
     const { revalidatePath } = await import('next/cache')
+    const { redirect } = await import('next/navigation')
     revalidatePath('/profile')
+    redirect('/profile')
   }
 
   return (
