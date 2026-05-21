@@ -46,10 +46,15 @@ export default async function AdminPage() {
             Importar fixtures, cargar resultados y forzar recálculo.
           </p>
         </Link>
-        <div className="rounded-lg border p-4 opacity-60">
+        <Link
+          href="/admin/users"
+          className="rounded-lg border p-4 hover:shadow-md transition-shadow"
+        >
           <h2 className="font-semibold">Usuarios</h2>
-          <p className="text-sm text-muted-foreground mt-1">Próximamente</p>
-        </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Ver todos los usuarios, sus salas y pronósticos.
+          </p>
+        </Link>
       </div>
     </div>
   )
