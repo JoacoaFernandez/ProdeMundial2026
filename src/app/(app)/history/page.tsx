@@ -15,10 +15,10 @@ const STAGE_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_STYLES: Record<string, { label: string; className: string }> = {
-  EXACT:       { label: 'Exacto',   className: 'bg-green-100 text-green-800 border-green-200' },
-  WINNER_DIFF: { label: '+Diff',    className: 'bg-blue-100 text-blue-800 border-blue-200' },
-  WINNER_ONLY: { label: 'Ganador',  className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  WRONG:       { label: 'Error',    className: 'bg-red-100 text-red-800 border-red-200' },
+  EXACT:       { label: 'Exacto',   className: 'text-green-400 border-green-600/40 bg-green-950/40' },
+  WINNER_DIFF: { label: '+Diff',    className: 'text-blue-400 border-blue-600/40 bg-blue-950/40' },
+  WINNER_ONLY: { label: 'Ganador',  className: 'text-yellow-400 border-yellow-600/40 bg-yellow-950/40' },
+  WRONG:       { label: 'Error',    className: 'text-red-400 border-red-600/40 bg-red-950/40' },
 }
 
 export default async function HistoryPage() {
@@ -112,18 +112,18 @@ export default async function HistoryPage() {
                 {/* Points / status */}
                 <div className="text-right shrink-0">
                   {isFinished && pred.points !== null ? (
-                    <div className="space-y-1">
-                      <p className="text-lg font-bold">+{pred.points}</p>
+                    <div className="space-y-1 text-right">
+                      <p className="text-lg font-bold text-primary">+{pred.points}</p>
                       {cat && (
                         <Badge variant="outline" className={`text-xs ${cat.className}`}>
                           {cat.label}
                         </Badge>
                       )}
                     </div>
+                  ) : isFinished ? (
+                    <span className="text-xs text-muted-foreground">Calculando...</span>
                   ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {pending > 0 && match.status === 'SCHEDULED' ? 'Pendiente' : '—'}
-                    </span>
+                    <span className="text-xs text-muted-foreground">Pendiente</span>
                   )}
                 </div>
               </div>

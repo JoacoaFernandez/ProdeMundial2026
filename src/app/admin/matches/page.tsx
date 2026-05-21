@@ -5,12 +5,22 @@ import { RecalculateButton } from './RecalculateButton'
 
 export default async function AdminMatchesPage() {
   const matches = await db.match.findMany({
-    include: {
-      homeTeam: true,
-      awayTeam: true,
+    orderBy: { kickoff: 'asc' },
+    select: {
+      id: true,
+      homeTeamId: true,
+      awayTeamId: true,
+      kickoff: true,
+      status: true,
+      stage: true,
+      homeScore: true,
+      awayScore: true,
+      knockoutWinnerId: true,
+      scoredAt: true,
+      homeTeam: { select: { code: true } },
+      awayTeam: { select: { code: true } },
       _count: { select: { predictions: true } },
     },
-    orderBy: { kickoff: 'asc' },
   })
 
   const hasApiKey = !!process.env.RAPIDAPI_KEY
@@ -54,10 +64,14 @@ export default async function AdminMatchesPage() {
                   id={match.id}
                   homeTeam={match.homeTeam.code}
                   awayTeam={match.awayTeam.code}
+                  homeTeamId={match.homeTeamId}
+                  awayTeamId={match.awayTeamId}
                   kickoff={match.kickoff.toISOString()}
                   status={match.status}
+                  stage={match.stage}
                   homeScore={match.homeScore}
                   awayScore={match.awayScore}
+                  knockoutWinnerId={match.knockoutWinnerId}
                   predictionCount={match._count.predictions}
                   scoredAt={match.scoredAt?.toISOString() ?? null}
                 />

@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { sendPushToUser } from '@/lib/push'
 import { NextResponse } from 'next/server'
 
 type Context = { params: Promise<{ id: string }> }
@@ -12,7 +13,13 @@ export async function POST(_req: Request, { params }: Context) {
 
   const room = await db.room.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      ownerId: true,
+      requireApproval: true,
+      maxMembers: true,
       _count: { select: { members: { where: { status: 'APPROVED' } } } },
     },
   })
@@ -47,6 +54,13 @@ export async function POST(_req: Request, { params }: Context) {
       status,
     },
   })
+
+  const joinerName = session.user.name ?? 'Alguien'
+  if (status === 'APPROVED') {
+    sendPushToUser(room.ownerId, `${joinerName} se unió a ${room.name}`, '¡Nuevo miembro en tu sala!').catch(() => {})
+  } else {
+    sendPushToUser(room.ownerId, `Nueva solicitud en ${room.name}`, `${joinerName} quiere unirse. Aprobalo desde la sala.`).catch(() => {})
+  }
 
   return NextResponse.json({
     status: member.status,

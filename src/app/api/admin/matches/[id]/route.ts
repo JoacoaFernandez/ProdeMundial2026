@@ -12,6 +12,10 @@ const UpdateMatchSchema = z.object({
   status: z.enum(['SCHEDULED', 'LIVE', 'FINISHED', 'CANCELLED', 'POSTPONED']).optional(),
 })
 
+const SetWinnerSchema = z.object({
+  knockoutWinnerId: z.string(),
+})
+
 export async function PATCH(req: Request, { params }: Context) {
   const session = await auth()
   if (!session || session.user.role !== 'ADMIN') {
@@ -20,6 +24,18 @@ export async function PATCH(req: Request, { params }: Context) {
 
   const { id } = await params
   const body = await req.json()
+
+  // Handle knockout winner update separately
+  if ('knockoutWinnerId' in body) {
+    const parsed = SetWinnerSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+    await db.match.update({
+      where: { id },
+      data: { knockoutWinnerId: parsed.data.knockoutWinnerId || null },
+    })
+    return NextResponse.json({ ok: true })
+  }
+
   const parsed = UpdateMatchSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
