@@ -57,94 +57,94 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-6 py-12">
+    <div className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Bienvenido</h1>
-          <p className="mt-2 text-gray-500">Inicia sesión para continuar</p>
+          <h1 className="text-4xl font-bold">Bienvenido</h1>
+          <p className="mt-2 text-muted-foreground">Inicia sesión para continuar</p>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
+            <label className="mb-1.5 block text-sm font-medium">Email</label>
             <input
               type="email"
               placeholder="Ingresa tu email"
               autoComplete="email"
               {...form.register('email')}
-              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none focus:ring-0"
+              className="w-full rounded-2xl border border-input bg-input/30 px-4 py-3.5 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none"
             />
             {form.formState.errors.email && (
-              <p className="mt-1 text-xs text-red-500">{form.formState.errors.email.message}</p>
+              <p className="mt-1 text-xs text-destructive">{form.formState.errors.email.message}</p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Contraseña</label>
+            <label className="mb-1.5 block text-sm font-medium">Contraseña</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Ingresa tu contraseña"
                 autoComplete="current-password"
                 {...form.register('password')}
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 pr-12 text-gray-900 placeholder:text-gray-400 focus:border-gray-400 focus:outline-none focus:ring-0"
+                className="w-full rounded-2xl border border-input bg-input/30 px-4 py-3.5 pr-12 text-sm placeholder:text-muted-foreground focus:border-ring focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400"
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
               </button>
             </div>
             {form.formState.errors.password && (
-              <p className="mt-1 text-xs text-red-500">{form.formState.errors.password.message}</p>
+              <p className="mt-1 text-xs text-destructive">{form.formState.errors.password.message}</p>
             )}
           </div>
 
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm font-medium text-red-500 hover:text-red-600">
+            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
-          {error && <p className="text-sm font-medium text-red-500">{error}</p>}
+          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
           <button
             type="submit"
             disabled={form.formState.isSubmitting}
-            className="w-full rounded-2xl bg-red-500 py-3.5 text-base font-semibold text-white hover:bg-red-600 disabled:opacity-60"
+            className="w-full rounded-2xl bg-primary py-3.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >
             {form.formState.isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
         </form>
 
         <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-sm text-gray-400">O continúa con</span>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-sm text-muted-foreground">O continúa con</span>
+          <div className="h-px flex-1 bg-border" />
         </div>
 
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="flex w-full items-center justify-center rounded-2xl border border-gray-200 bg-white py-3.5 hover:bg-gray-50 disabled:opacity-60"
+          className="flex w-full items-center justify-center rounded-2xl border border-input bg-input/30 py-3.5 hover:bg-input/50 disabled:opacity-60"
         >
           <GoogleIcon />
         </button>
 
-        <p className="mt-6 text-center text-xs text-gray-400">
-          Al iniciar sesión, aceptas nuestros{' '}
-          <Link href="/terms" className="underline">Términos y Condiciones</Link>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Al iniciar sesión, aceptás nuestros{' '}
+          <Link href="/terms" className="underline hover:text-foreground">Términos y Condiciones</Link>
           {' '}y la{' '}
-          <Link href="/privacy" className="underline">Política de Privacidad</Link>
+          <Link href="/privacy" className="underline hover:text-foreground">Política de Privacidad</Link>
         </p>
 
-        <p className="mt-4 text-center text-sm text-gray-500">
-          ¿No tienes cuenta?{' '}
-          <Link href="/register" className="font-semibold text-red-500 hover:text-red-600">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          ¿No tenés cuenta?{' '}
+          <Link href="/register" className="font-semibold text-primary hover:underline">
             Registrarse
           </Link>
         </p>
