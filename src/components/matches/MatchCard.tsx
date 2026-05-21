@@ -23,6 +23,7 @@ type MatchCardProps = {
   awayScore: number | null
   matchday: number | null
   activeMatchday: number | null
+  timezone: string
   isLocked: boolean
   myPrediction: Prediction | null
 }
@@ -83,6 +84,7 @@ export function MatchCard({
   awayScore,
   matchday,
   activeMatchday,
+  timezone,
   isLocked,
   myPrediction,
 }: MatchCardProps) {
@@ -125,9 +127,9 @@ export function MatchCard({
                 <span className="text-orange-600 font-medium">Cerrado</span>
               ) : (
                 <span>
-                  {kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}
+                  {kickoffDate.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: timezone })}
                   {' · '}
-                  {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+                  {kickoffDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: timezone })}
                 </span>
               )}
             </div>

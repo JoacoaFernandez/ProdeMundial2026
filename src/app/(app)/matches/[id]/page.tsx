@@ -39,7 +39,7 @@ export default async function MatchDetailPage({ params }: Props) {
   const session = await auth()
   const { id } = await params
 
-  const [match, activeMatchdayRow] = await Promise.all([
+  const [match, activeMatchdayRow, userRow] = await Promise.all([
     db.match.findUnique({
       where: { id },
       include: {
@@ -56,11 +56,16 @@ export default async function MatchDetailPage({ params }: Props) {
       orderBy: { matchday: 'asc' },
       select: { matchday: true },
     }),
+    db.user.findUnique({
+      where: { id: session!.user.id },
+      select: { timezone: true },
+    }),
   ])
 
   if (!match) notFound()
 
   const activeMatchday = activeMatchdayRow?.matchday ?? null
+  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
   const isFutureMatchday = match.matchday !== null && activeMatchday !== null && match.matchday > activeMatchday
   const isLocked = new Date() >= match.lockAt
   const isFinished = match.status === 'FINISHED'
@@ -106,14 +111,14 @@ export default async function MatchDetailPage({ params }: Props) {
           ) : (
             <div className="text-center">
               <p className="text-lg font-semibold">
-                {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+                {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: timezone })}
               </p>
               <p className="text-sm text-muted-foreground">
                 {new Date(match.kickoff).toLocaleDateString('es-AR', {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
-                  timeZone: 'America/Argentina/Buenos_Aires',
+                  timeZone: timezone,
                 })}
               </p>
             </div>

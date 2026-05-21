@@ -28,6 +28,7 @@ type Match = {
 type MatchListProps = {
   matches: Match[]
   activeMatchday: number | null
+  timezone: string
 }
 
 type Section = {
@@ -95,10 +96,12 @@ function buildSections(matches: Match[], activeMatchday: number | null): Section
 function MatchSection({
   section,
   activeMatchday,
+  timezone,
   defaultOpen,
 }: {
   section: Section
   activeMatchday: number | null
+  timezone: string
   defaultOpen: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -136,7 +139,7 @@ function MatchSection({
       {open && (
         <div className="border-t border-border/40 p-3 space-y-3 bg-background/50">
           {section.matches.map((match) => (
-            <MatchCard key={match.id} {...match} activeMatchday={activeMatchday} />
+            <MatchCard key={match.id} {...match} activeMatchday={activeMatchday} timezone={timezone} />
           ))}
         </div>
       )}
@@ -144,7 +147,7 @@ function MatchSection({
   )
 }
 
-export function MatchList({ matches, activeMatchday }: MatchListProps) {
+export function MatchList({ matches, activeMatchday, timezone }: MatchListProps) {
   const sections = buildSections(matches, activeMatchday)
 
   if (sections.length === 0) {
@@ -162,6 +165,7 @@ export function MatchList({ matches, activeMatchday }: MatchListProps) {
           key={section.key}
           section={section}
           activeMatchday={activeMatchday}
+          timezone={timezone}
           defaultOpen={section.isActive}
         />
       ))}

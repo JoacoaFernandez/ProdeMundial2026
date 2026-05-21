@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { ShieldCheck } from 'lucide-react'
+import { TIMEZONES } from '@/lib/timezones'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -16,6 +17,7 @@ export default async function ProfilePage() {
       favoriteTeam: true,
       _count: { select: { predictions: true, memberships: { where: { status: 'APPROVED' } } } },
     },
+    // timezone included via include
   })
 
   if (!user) redirect('/login')
@@ -44,9 +46,10 @@ export default async function ProfilePage() {
     const s = await getAuth()
     if (!s) return
 
+    const timezone = (formData.get('timezone') as string) || 'America/Argentina/Buenos_Aires'
     await prisma.user.update({
       where: { id: s.user.id },
-      data: { name, favoriteTeamId },
+      data: { name, favoriteTeamId, timezone },
     })
 
     const { revalidatePath } = await import('next/cache')
@@ -114,6 +117,20 @@ export default async function ProfilePage() {
                 value={user.email}
                 className="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 text-sm shadow-sm text-muted-foreground"
               />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="timezone" className="text-sm font-medium">Zona horaria</label>
+              <select
+                id="timezone"
+                name="timezone"
+                defaultValue={user.timezone}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz.value} value={tz.value}>{tz.label}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1">

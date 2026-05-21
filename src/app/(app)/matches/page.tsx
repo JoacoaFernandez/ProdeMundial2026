@@ -5,7 +5,7 @@ import { MatchList } from '@/components/matches/MatchList'
 export default async function MatchesPage() {
   const session = await auth()
 
-  const [matches, activeMatchdayRow] = await Promise.all([
+  const [matches, activeMatchdayRow, userRow] = await Promise.all([
     db.match.findMany({
       include: {
         homeTeam: true,
@@ -22,9 +22,14 @@ export default async function MatchesPage() {
       orderBy: { matchday: 'asc' },
       select: { matchday: true },
     }),
+    db.user.findUnique({
+      where: { id: session!.user.id },
+      select: { timezone: true },
+    }),
   ])
 
   const activeMatchday = activeMatchdayRow?.matchday ?? null
+  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
 
   const serialized = matches.map((m) => ({
     id: m.id,
@@ -58,7 +63,7 @@ export default async function MatchesPage() {
           No hay partidos disponibles todavía.
         </div>
       ) : (
-        <MatchList matches={serialized} activeMatchday={activeMatchday} />
+        <MatchList matches={serialized} activeMatchday={activeMatchday} timezone={timezone} />
       )}
     </div>
   )

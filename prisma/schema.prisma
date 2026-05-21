@@ -52,6 +52,7 @@ model User {
   role           Role      @default(USER)
   favoriteTeamId String?
   favoriteTeam   Team?     @relation(fields: [favoriteTeamId], references: [id])
+  timezone       String    @default("America/Argentina/Buenos_Aires")
   hasProPass     Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

@@ -6,7 +6,7 @@ import { MatchCard } from '@/components/matches/MatchCard'
 export default async function DashboardPage() {
   const session = await auth()
 
-  const [upcomingMatches, myRooms, myPredictionCount, activeMatchdayRow] = await Promise.all([
+  const [upcomingMatches, myRooms, myPredictionCount, activeMatchdayRow, userRow] = await Promise.all([
     db.match.findMany({
       where: {
         status: { in: ['SCHEDULED', 'LIVE'] },
@@ -39,9 +39,14 @@ export default async function DashboardPage() {
       orderBy: { matchday: 'asc' },
       select: { matchday: true },
     }),
+    db.user.findUnique({
+      where: { id: session!.user.id },
+      select: { timezone: true },
+    }),
   ])
 
   const activeMatchday = activeMatchdayRow?.matchday ?? null
+  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
 
   const topRoom = myRooms[0] ?? null
 
@@ -140,6 +145,7 @@ export default async function DashboardPage() {
                 awayScore={m.awayScore}
                 matchday={m.matchday}
                 activeMatchday={activeMatchday}
+                timezone={timezone}
                 isLocked={new Date() >= m.lockAt}
                 myPrediction={m.predictions[0] ?? null}
               />
