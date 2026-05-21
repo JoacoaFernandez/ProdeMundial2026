@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { ShieldCheck } from 'lucide-react'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -56,6 +58,19 @@ export default async function ProfilePage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Mi perfil</h1>
+
+      {user.role === 'ADMIN' && (
+        <Link
+          href="/admin"
+          className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4 hover:bg-primary/15 transition-colors"
+        >
+          <ShieldCheck className="size-6 text-primary shrink-0" />
+          <div>
+            <p className="font-semibold text-primary">Panel de administración</p>
+            <p className="text-xs text-muted-foreground">Usuarios, partidos, resultados</p>
+          </div>
+        </Link>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
