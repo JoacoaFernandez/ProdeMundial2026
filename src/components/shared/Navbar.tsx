@@ -22,7 +22,7 @@ export default function Navbar({ user }: NavbarProps) {
     <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-[family-name:var(--font-anybody)] font-black uppercase tracking-tighter text-primary text-lg">
-          WC2026 PREDICTOR
+          PRODE MUNDIAL 2026
         </Link>
 
         <nav className="hidden md:flex items-center gap-4">
@@ -43,9 +43,11 @@ export default function Navbar({ user }: NavbarProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8 border border-primary/30">
-            <AvatarFallback className="text-xs bg-muted text-primary font-bold">{initials}</AvatarFallback>
-          </Avatar>
+          <Link href="/profile">
+            <Avatar className="h-8 w-8 border border-primary/30 hover:border-primary transition-colors cursor-pointer">
+              <AvatarFallback className="text-xs bg-muted text-primary font-bold">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
