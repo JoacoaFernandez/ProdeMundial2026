@@ -41,9 +41,19 @@ export async function GET(request: Request) {
     const wasFinished = match.status === 'FINISHED' && match.scoredAt !== null
     const isNowFinished = status === 'FINISHED' && homeScore !== null && awayScore !== null
 
+    // Resolve knockoutWinnerId for AET/PEN matches
+    let knockoutWinnerId: string | undefined
+    if (f.winner === 'HOME_TEAM') knockoutWinnerId = match.homeTeamId
+    else if (f.winner === 'AWAY_TEAM') knockoutWinnerId = match.awayTeamId
+
     await db.match.update({
       where: { id: match.id },
-      data: { status, homeScore, awayScore },
+      data: {
+        status,
+        homeScore,
+        awayScore,
+        ...(knockoutWinnerId ? { knockoutWinnerId } : {}),
+      },
     })
     updated++
 

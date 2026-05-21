@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import { GenerateKnockoutButtons } from './GenerateKnockoutButtons'
 
 export default async function AdminPage() {
   const [userCount, matchCount, predictionCount, roomCount] = await Promise.all([
@@ -35,6 +36,8 @@ export default async function AdminPage() {
         <p className="text-sm text-muted-foreground">Pronósticos últimas 24hs</p>
         <p className="text-2xl font-bold mt-1">{recentPredictions}</p>
       </div>
+
+      <GenerateKnockoutButtons />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Link

@@ -101,10 +101,17 @@ model Match {
   matchday    Int?
   predictions Prediction[]
 
+  // Bracket tracking for knockout rounds
+  bracketSlot      String? @unique // e.g. "R32_1", "R16_1", "QF_1", "SF_1", "THIRD", "FINAL"
+  homeSlotLabel    String? // e.g. "1° Grupo A"
+  awaySlotLabel    String? // e.g. "2° Grupo B"
+  knockoutWinnerId String? // teamId of winner when match ends AET/PEN
+
   @@index([kickoff])
   @@index([status])
   @@index([lockAt])
   @@index([matchday])
+  @@index([bracketSlot])
 }
 
 model Prediction {

@@ -17,6 +17,7 @@ export type ApiFixture = {
   }
   goals: { home: number | null; away: number | null }
   league: { round: string; group?: string | null }
+  winner?: 'HOME_TEAM' | 'AWAY_TEAM' | null
 }
 
 export async function fetchFixturesByLeague(leagueId: string, season: number): Promise<ApiFixture[]> {
@@ -74,7 +75,8 @@ function mapFdMatchToApiFixture(m: any): ApiFixture {
     league: {
       round: m.stage,
       group: m.group ? m.group.replace('GROUP_', '') : null
-    }
+    },
+    winner: m.score?.winner ?? null,
   }
 }
 
