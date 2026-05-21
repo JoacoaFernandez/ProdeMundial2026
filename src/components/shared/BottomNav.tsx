@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: '/',        label: 'Inicio',    icon: HomeIcon },
   { href: '/grupos',  label: 'Grupos',    icon: TableIcon },
   { href: '/matches', label: 'Partidos',  icon: CalendarIcon },
+  { href: '/ranking', label: 'Ranking',   icon: TrophyIcon },
   { href: '/rooms',   label: 'Salas',     icon: UsersIcon },
   { href: '/profile', label: 'Perfil',    icon: UserIcon },
 ]
@@ -16,7 +17,7 @@ export default function BottomNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-card/95 backdrop-blur-sm rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid grid-cols-6 h-16">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
           return (
