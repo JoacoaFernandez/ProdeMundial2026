@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
 import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email'
+import { joinGlobalRoom } from '@/lib/global-room'
 import { RegisterSchema, ForgotPasswordSchema, ResetPasswordSchema } from '@/lib/validations/auth'
 import type { ApiResponse } from '@/types'
 
@@ -65,10 +66,11 @@ export async function verifyEmailAction(
   const user = await db.user.update({
     where: { email: record.identifier },
     data: { emailVerified: new Date() },
-    select: { name: true },
+    select: { id: true, name: true },
   })
 
   await db.verificationToken.delete({ where: { token } })
+  joinGlobalRoom(user.id).catch(() => {})
 
   return { ok: true, data: { name: user.name } }
 }

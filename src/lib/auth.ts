@@ -4,6 +4,7 @@ import Google from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { db } from './db'
 import { LoginSchema } from './validations/auth'
+import { joinGlobalRoom } from './global-room'
 import type { Role } from '@/generated/prisma/enums'
 
 declare module 'next-auth' {
@@ -95,6 +96,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             data: { email, name, emailVerified: new Date(), passwordHash: null },
             select: { id: true, role: true, emailVerified: true },
           })
+          joinGlobalRoom(dbUser.id).catch(() => {})
         } else if (!dbUser.emailVerified) {
           await db.user.update({
             where: { id: dbUser.id },

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { GenerateKnockoutButtons } from './GenerateKnockoutButtons'
+import { SyncGlobalRoomButton } from './SyncGlobalRoomButton'
 
 export default async function AdminPage() {
   const [userCount, matchCount, predictionCount, roomCount] = await Promise.all([
@@ -35,6 +36,11 @@ export default async function AdminPage() {
       <div className="rounded-lg border p-4">
         <p className="text-sm text-muted-foreground">Pronósticos últimas 24hs</p>
         <p className="text-2xl font-bold mt-1">{recentPredictions}</p>
+      </div>
+
+      <div className="rounded-lg border p-4 space-y-3">
+        <h2 className="font-semibold">Sala Global</h2>
+        <SyncGlobalRoomButton />
       </div>
 
       <GenerateKnockoutButtons />

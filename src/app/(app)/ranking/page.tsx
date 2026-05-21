@@ -1,42 +1,73 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
+import { GLOBAL_ROOM_CODE } from '@/lib/global-room'
 
 export default async function RankingPage() {
   const session = await auth()
 
-  const stats = await db.prediction.groupBy({
-    by: ['userId'],
-    where: { points: { not: null } },
-    _sum: { points: true },
-    _count: { id: true },
-    orderBy: { _sum: { points: 'desc' } },
+  const globalRoom = await db.room.findUnique({
+    where: { code: GLOBAL_ROOM_CODE },
+    select: { id: true },
   })
 
-  const exactCounts = await db.prediction.groupBy({
-    by: ['userId'],
-    where: { category: 'EXACT' },
-    _count: { id: true },
-  })
+  let ranking: { rank: number; userId: string; name: string; totalScore: number; exactCount: number; predictions: number; isMe: boolean }[] = []
 
-  const userIds = stats.map((s) => s.userId)
-  const users = await db.user.findMany({
-    where: { id: { in: userIds } },
-    select: { id: true, name: true },
-  })
+  if (globalRoom) {
+    // Use pre-computed scores from the global room
+    const members = await db.roomMember.findMany({
+      where: { roomId: globalRoom.id, status: 'APPROVED' },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: [{ totalScore: 'desc' }, { exactCount: 'desc' }],
+    })
 
-  const exactMap = Object.fromEntries(exactCounts.map((e) => [e.userId, e._count.id]))
-  const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]))
+    const predCounts = await db.prediction.groupBy({
+      by: ['userId'],
+      where: { userId: { in: members.map((m) => m.userId) } },
+      _count: { id: true },
+    })
+    const predMap = Object.fromEntries(predCounts.map((p) => [p.userId, p._count.id]))
 
-  const ranking = stats.map((s, i) => ({
-    rank: i + 1,
-    userId: s.userId,
-    name: userMap[s.userId] ?? 'Usuario',
-    totalScore: s._sum.points ?? 0,
-    exactCount: exactMap[s.userId] ?? 0,
-    predictions: s._count.id,
-    isMe: s.userId === session!.user.id,
-  }))
+    ranking = members.map((m, i) => ({
+      rank: i + 1,
+      userId: m.userId,
+      name: m.user.name,
+      totalScore: m.totalScore,
+      exactCount: m.exactCount,
+      predictions: predMap[m.userId] ?? 0,
+      isMe: m.userId === session!.user.id,
+    }))
+  } else {
+    // Fallback: compute from predictions directly
+    const stats = await db.prediction.groupBy({
+      by: ['userId'],
+      where: { points: { not: null } },
+      _sum: { points: true },
+      _count: { id: true },
+      orderBy: { _sum: { points: 'desc' } },
+    })
+    const exactCounts = await db.prediction.groupBy({
+      by: ['userId'],
+      where: { category: 'EXACT' },
+      _count: { id: true },
+    })
+    const users = await db.user.findMany({
+      where: { id: { in: stats.map((s) => s.userId) } },
+      select: { id: true, name: true },
+    })
+    const exactMap = Object.fromEntries(exactCounts.map((e) => [e.userId, e._count.id]))
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u.name]))
+
+    ranking = stats.map((s, i) => ({
+      rank: i + 1,
+      userId: s.userId,
+      name: userMap[s.userId] ?? 'Usuario',
+      totalScore: s._sum.points ?? 0,
+      exactCount: exactMap[s.userId] ?? 0,
+      predictions: s._count.id,
+      isMe: s.userId === session!.user.id,
+    }))
+  }
 
   const myEntry = ranking.find((r) => r.isMe)
 
@@ -47,7 +78,6 @@ export default async function RankingPage() {
         <p className="text-sm text-muted-foreground">{ranking.length} participantes</p>
       </div>
 
-      {/* My position card */}
       {myEntry && (
         <div className="rounded-xl border bg-primary/5 p-4 flex items-center justify-between">
           <div>
