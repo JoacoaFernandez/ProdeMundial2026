@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { href: '/',        label: 'Inicio',    icon: HomeIcon },
+  { href: '/grupos',  label: 'Grupos',    icon: TableIcon },
   { href: '/matches', label: 'Partidos',  icon: CalendarIcon },
   { href: '/ranking', label: 'Ranking',   icon: TrophyIcon },
   { href: '/rooms',   label: 'Salas',     icon: UsersIcon },
@@ -37,11 +37,11 @@ export default function BottomNav() {
   )
 }
 
-function HomeIcon({ className }: { className?: string }) {
+function TableIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-      <path d="M9 21V12h6v9" />
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 9h18M3 15h18M9 3v18" />
     </svg>
   )
 }

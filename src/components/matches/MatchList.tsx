@@ -10,6 +10,7 @@ type Match = {
   kickoff: string
   lockAt: string
   stage: string
+  group?: string | null
   status: string
   homeScore: number | null
   awayScore: number | null

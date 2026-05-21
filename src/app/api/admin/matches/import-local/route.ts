@@ -46,10 +46,14 @@ export async function POST() {
         team = null
       }
 
+      if (team && groupStr && team.group !== groupStr) {
+        team = await db.team.update({ where: { id: team.id }, data: { group: groupStr } })
+      }
+
       if (!team && code) {
         team = await db.team.findUnique({ where: { code } })
         if (team) {
-          await db.team.update({ where: { id: team.id }, data: { externalId: String(t.id) } })
+          await db.team.update({ where: { id: team.id }, data: { externalId: String(t.id), ...(groupStr ? { group: groupStr } : {}) } })
         } else {
           team = await db.team.create({
             data: { externalId: String(t.id), name: t.name, code, group: groupStr },

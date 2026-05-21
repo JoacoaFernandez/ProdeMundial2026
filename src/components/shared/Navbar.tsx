@@ -26,6 +26,9 @@ export default function Navbar({ user }: NavbarProps) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-4">
+          <Link href="/grupos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            Grupos
+          </Link>
           <Link href="/matches" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Partidos
           </Link>

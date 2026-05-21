@@ -17,6 +17,7 @@ type MatchCardProps = {
   kickoff: string
   lockAt: string
   stage: string
+  group?: string | null
   status: string
   homeScore: number | null
   awayScore: number | null
@@ -74,6 +75,7 @@ export function MatchCard({
   awayTeam,
   kickoff,
   stage,
+  group,
   status,
   homeScore,
   awayScore,
@@ -101,7 +103,7 @@ export function MatchCard({
         <div className="p-4 space-y-4">
           {/* Stage + date */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{STAGE_LABELS[stage] ?? stage}</span>
+            <span>{stage === 'GROUP' && group ? `Grupo ${group}` : (STAGE_LABELS[stage] ?? stage)}</span>
             <div className="flex items-center gap-1.5">
               {isLive ? (
                 <span className="flex items-center gap-1 font-semibold text-green-600">
