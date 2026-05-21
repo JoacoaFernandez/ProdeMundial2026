@@ -21,11 +21,13 @@ const anybody = Anybody({
 export const metadata: Metadata = {
   title: 'PRODE Mundial FIFA 2026',
   description: 'Pronosticá los partidos del Mundial 2026 y competí con tus amigos.',
-  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Prode 2026',
+  },
+  icons: {
+    apple: '/apple-touch-icon.png',
   },
 }
 
@@ -36,19 +38,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} ${anybody.variable} dark h-full antialiased`}>
-      <head>
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#00170f" />
-      </head>
       <body className="min-h-full flex flex-col">
         {children}
-        <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js');
-            });
-          }
-        `}} />
+        <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})}` }} />
       </body>
     </html>
   )
