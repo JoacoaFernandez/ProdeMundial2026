@@ -82,6 +82,8 @@ export async function POST() {
     const status = mapStatusToMatchStatus(short)
     const stage = mapRoundToStage(m.stage)
 
+    const matchday = m.matchday ?? null
+
     await db.match.upsert({
       where: { externalId: String(m.id) },
       update: {
@@ -93,6 +95,7 @@ export async function POST() {
         kickoff,
         lockAt,
         stage,
+        matchday,
       },
       create: {
         externalId: String(m.id),
@@ -102,6 +105,7 @@ export async function POST() {
         lockAt,
         stage,
         status,
+        matchday,
         homeScore: m.score?.fullTime?.home ?? null,
         awayScore: m.score?.fullTime?.away ?? null,
       },

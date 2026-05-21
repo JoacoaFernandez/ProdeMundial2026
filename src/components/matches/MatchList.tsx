@@ -14,6 +14,7 @@ type Match = {
   status: string
   homeScore: number | null
   awayScore: number | null
+  matchday: number | null
   isLocked: boolean
   myPrediction: {
     homeScore: number
@@ -25,6 +26,7 @@ type Match = {
 
 type MatchListProps = {
   matches: Match[]
+  activeMatchday: number | null
 }
 
 const FILTER_OPTIONS = [
@@ -60,7 +62,7 @@ function groupByDate(matches: Match[]): [string, Match[]][] {
   return Array.from(map.entries())
 }
 
-export function MatchList({ matches }: MatchListProps) {
+export function MatchList({ matches, activeMatchday }: MatchListProps) {
   const [filter, setFilter] = useState<Filter>('upcoming')
 
   const filtered = matches.filter((m) => {
@@ -112,7 +114,7 @@ export function MatchList({ matches }: MatchListProps) {
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {dayMatches.map((match) => (
-                    <MatchCard key={match.id} {...match} />
+                    <MatchCard key={match.id} {...match} activeMatchday={activeMatchday} />
                   ))}
                 </div>
               </div>

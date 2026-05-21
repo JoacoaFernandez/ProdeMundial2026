@@ -6,7 +6,7 @@ import { MatchCard } from '@/components/matches/MatchCard'
 export default async function DashboardPage() {
   const session = await auth()
 
-  const [upcomingMatches, myRooms, myPredictionCount] = await Promise.all([
+  const [upcomingMatches, myRooms, myPredictionCount, activeMatchdayRow] = await Promise.all([
     db.match.findMany({
       where: {
         status: { in: ['SCHEDULED', 'LIVE'] },
@@ -34,7 +34,14 @@ export default async function DashboardPage() {
       take: 3,
     }),
     db.prediction.count({ where: { userId: session!.user.id } }),
+    db.match.findFirst({
+      where: { status: { notIn: ['FINISHED', 'CANCELLED'] }, matchday: { not: null } },
+      orderBy: { matchday: 'asc' },
+      select: { matchday: true },
+    }),
   ])
+
+  const activeMatchday = activeMatchdayRow?.matchday ?? null
 
   const topRoom = myRooms[0] ?? null
 
@@ -106,6 +113,8 @@ export default async function DashboardPage() {
                 status={m.status}
                 homeScore={m.homeScore}
                 awayScore={m.awayScore}
+                matchday={m.matchday}
+                activeMatchday={activeMatchday}
                 isLocked={new Date() >= m.lockAt}
                 myPrediction={m.predictions[0] ?? null}
               />

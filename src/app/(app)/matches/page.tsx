@@ -5,17 +5,26 @@ import { MatchList } from '@/components/matches/MatchList'
 export default async function MatchesPage() {
   const session = await auth()
 
-  const matches = await db.match.findMany({
-    include: {
-      homeTeam: true,
-      awayTeam: true,
-      predictions: {
-        where: { userId: session!.user.id },
-        select: { homeScore: true, awayScore: true, points: true, category: true },
+  const [matches, activeMatchdayRow] = await Promise.all([
+    db.match.findMany({
+      include: {
+        homeTeam: true,
+        awayTeam: true,
+        predictions: {
+          where: { userId: session!.user.id },
+          select: { homeScore: true, awayScore: true, points: true, category: true },
+        },
       },
-    },
-    orderBy: { kickoff: 'asc' },
-  })
+      orderBy: { kickoff: 'asc' },
+    }),
+    db.match.findFirst({
+      where: { status: { notIn: ['FINISHED', 'CANCELLED'] }, matchday: { not: null } },
+      orderBy: { matchday: 'asc' },
+      select: { matchday: true },
+    }),
+  ])
+
+  const activeMatchday = activeMatchdayRow?.matchday ?? null
 
   const serialized = matches.map((m) => ({
     id: m.id,
@@ -28,6 +37,7 @@ export default async function MatchesPage() {
     status: m.status,
     homeScore: m.homeScore,
     awayScore: m.awayScore,
+    matchday: m.matchday,
     isLocked: new Date() >= m.lockAt,
     myPrediction: m.predictions[0] ?? null,
   }))
@@ -48,7 +58,7 @@ export default async function MatchesPage() {
           No hay partidos disponibles todavía.
         </div>
       ) : (
-        <MatchList matches={serialized} />
+        <MatchList matches={serialized} activeMatchday={activeMatchday} />
       )}
     </div>
   )

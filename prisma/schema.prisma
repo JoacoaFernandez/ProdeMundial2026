@@ -95,11 +95,13 @@ model Match {
   venue      String?
   scoredAt   DateTime?
 
+  matchday    Int?
   predictions Prediction[]
 
   @@index([kickoff])
   @@index([status])
   @@index([lockAt])
+  @@index([matchday])
 }
 
 model Prediction {

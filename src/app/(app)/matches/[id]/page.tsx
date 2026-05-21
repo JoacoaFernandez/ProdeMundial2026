@@ -39,20 +39,29 @@ export default async function MatchDetailPage({ params }: Props) {
   const session = await auth()
   const { id } = await params
 
-  const match = await db.match.findUnique({
-    where: { id },
-    include: {
-      homeTeam: true,
-      awayTeam: true,
-      predictions: {
-        where: { userId: session!.user.id },
-        select: { id: true, homeScore: true, awayScore: true, points: true, category: true, updatedAt: true },
+  const [match, activeMatchdayRow] = await Promise.all([
+    db.match.findUnique({
+      where: { id },
+      include: {
+        homeTeam: true,
+        awayTeam: true,
+        predictions: {
+          where: { userId: session!.user.id },
+          select: { id: true, homeScore: true, awayScore: true, points: true, category: true, updatedAt: true },
+        },
       },
-    },
-  })
+    }),
+    db.match.findFirst({
+      where: { status: { notIn: ['FINISHED', 'CANCELLED'] }, matchday: { not: null } },
+      orderBy: { matchday: 'asc' },
+      select: { matchday: true },
+    }),
+  ])
 
   if (!match) notFound()
 
+  const activeMatchday = activeMatchdayRow?.matchday ?? null
+  const isFutureMatchday = match.matchday !== null && activeMatchday !== null && match.matchday > activeMatchday
   const isLocked = new Date() >= match.lockAt
   const isFinished = match.status === 'FINISHED'
   const isLive = match.status === 'LIVE'
@@ -149,7 +158,13 @@ export default async function MatchDetailPage({ params }: Props) {
       {/* Prediction form */}
       <div className="rounded-lg border p-6">
         <h2 className="font-semibold mb-4">
-          {isFinished ? 'Tu pronóstico' : isLocked ? 'Pronóstico cerrado' : 'Cargá tu pronóstico'}
+          {isFinished
+            ? 'Tu pronóstico'
+            : isFutureMatchday
+            ? `Disponible en Jornada ${match.matchday}`
+            : isLocked
+            ? 'Pronóstico cerrado'
+            : 'Cargá tu pronóstico'}
         </h2>
         <PredictionForm
           matchId={match.id}
@@ -157,7 +172,7 @@ export default async function MatchDetailPage({ params }: Props) {
           awayTeamName={match.awayTeam.name}
           initialHome={pred?.homeScore}
           initialAway={pred?.awayScore}
-          isLocked={isLocked || isFinished}
+          isLocked={isLocked || isFinished || isFutureMatchday}
         />
       </div>
     </div>

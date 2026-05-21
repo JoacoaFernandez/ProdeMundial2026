@@ -21,6 +21,8 @@ type MatchCardProps = {
   status: string
   homeScore: number | null
   awayScore: number | null
+  matchday: number | null
+  activeMatchday: number | null
   isLocked: boolean
   myPrediction: Prediction | null
 }
@@ -79,6 +81,8 @@ export function MatchCard({
   status,
   homeScore,
   awayScore,
+  matchday,
+  activeMatchday,
   isLocked,
   myPrediction,
 }: MatchCardProps) {
@@ -88,6 +92,7 @@ export function MatchCard({
   const hasPrediction = myPrediction !== null
   const isScored = hasPrediction && myPrediction!.points !== null
   const cat = isScored && myPrediction?.category ? CATEGORY_STYLES[myPrediction.category] : null
+  const isFutureMatchday = matchday !== null && activeMatchday !== null && matchday > activeMatchday
 
   return (
     <Link href={`/matches/${id}`} className="block group">
@@ -143,7 +148,11 @@ export function MatchCard({
 
           {/* Prediction footer */}
           <div className="border-t pt-3 min-h-[28px]">
-            {isScored && cat ? (
+            {isFutureMatchday ? (
+              <p className="text-xs text-muted-foreground text-center">
+                Disponible en Jornada {matchday}
+              </p>
+            ) : isScored && cat ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className={cn('text-xs font-semibold', cat.text)}>{cat.label}</span>

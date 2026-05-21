@@ -15,7 +15,15 @@ export async function POST(req: Request) {
 
   const { matchId, homeScore, awayScore } = parsed.data
 
-  const match = await db.match.findUnique({ where: { id: matchId } })
+  const [match, activeMatchdayRow] = await Promise.all([
+    db.match.findUnique({ where: { id: matchId } }),
+    db.match.findFirst({
+      where: { status: { notIn: ['FINISHED', 'CANCELLED'] }, matchday: { not: null } },
+      orderBy: { matchday: 'asc' },
+      select: { matchday: true },
+    }),
+  ])
+
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
   if (new Date() >= match.lockAt) {
@@ -24,6 +32,11 @@ export async function POST(req: Request) {
 
   if (match.status === 'FINISHED' || match.status === 'CANCELLED') {
     return NextResponse.json({ error: 'El partido ya finalizó' }, { status: 403 })
+  }
+
+  const activeMatchday = activeMatchdayRow?.matchday ?? null
+  if (match.matchday !== null && activeMatchday !== null && match.matchday > activeMatchday) {
+    return NextResponse.json({ error: 'Esta jornada aún no está disponible' }, { status: 403 })
   }
 
   const prediction = await db.prediction.upsert({
