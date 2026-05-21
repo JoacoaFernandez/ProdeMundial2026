@@ -10,7 +10,14 @@ export async function GET(request: Request) {
   }
 
   const leagueId = process.env.FIFA_WORLD_CUP_LEAGUE_ID ?? '1'
-  const fixtures = await fetchTodayFixtures(leagueId)
+
+  let fixtures
+  try {
+    fixtures = await fetchTodayFixtures(leagueId)
+  } catch (err) {
+    console.error('[sync-results] Error fetching fixtures:', err)
+    return NextResponse.json({ ok: false, error: String(err) }, { status: 200 })
+  }
 
   let updated = 0
   let scored = 0
