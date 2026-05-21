@@ -103,6 +103,12 @@ function LoginForm() {
             )}
           </div>
 
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
 
           <button

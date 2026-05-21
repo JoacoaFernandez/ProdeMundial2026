@@ -8,6 +8,28 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+export async function sendPasswordResetEmail(email: string, name: string, token: string) {
+  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
+
+  await transporter.sendMail({
+    from: `"PRODE Mundial 2026" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: 'Resetear contraseña — PRODE Mundial 2026',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#111">¡Hola, ${name}!</h2>
+        <p>Recibimos una solicitud para resetear tu contraseña.</p>
+        <p>Hacé click en el botón para elegir una nueva:</p>
+        <a href="${resetUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#84cc16;color:#000;border-radius:8px;text-decoration:none;font-weight:bold;">
+          Resetear contraseña
+        </a>
+        <p style="color:#666;font-size:13px;">El link expira en 1 hora.</p>
+        <p style="color:#666;font-size:13px;">Si no solicitaste esto, ignorá este email.</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendVerificationEmail(email: string, name: string, token: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${token}`
 

@@ -3,8 +3,8 @@
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
-import { sendVerificationEmail } from '@/lib/email'
-import { RegisterSchema } from '@/lib/validations/auth'
+import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email'
+import { RegisterSchema, ForgotPasswordSchema, ResetPasswordSchema } from '@/lib/validations/auth'
 import type { ApiResponse } from '@/types'
 
 type RegisterState = ApiResponse<{ email: string }> | undefined
@@ -71,4 +71,75 @@ export async function verifyEmailAction(
   await db.verificationToken.delete({ where: { token } })
 
   return { ok: true, data: { name: user.name } }
+}
+
+type ForgotState = ApiResponse<{ email: string }> | undefined
+
+export async function forgotPasswordAction(
+  _prev: ForgotState,
+  formData: FormData,
+): Promise<ForgotState> {
+  const parsed = ForgotPasswordSchema.safeParse({ email: formData.get('email') })
+  if (!parsed.success) {
+    return { ok: false, error: 'Ingresá un email válido.' }
+  }
+
+  const { email } = parsed.data
+  const user = await db.user.findUnique({
+    where: { email },
+    select: { id: true, name: true, passwordHash: true },
+  })
+
+  // Siempre respondemos ok para no revelar si el email existe
+  if (!user || !user.passwordHash) {
+    return { ok: true, data: { email } }
+  }
+
+  // Borrar tokens anteriores del mismo email
+  await db.passwordResetToken.deleteMany({ where: { identifier: email } })
+
+  const token = randomBytes(32).toString('hex')
+  const expires = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+
+  await db.passwordResetToken.create({
+    data: { identifier: email, token, expires, userId: user.id },
+  })
+
+  try {
+    await sendPasswordResetEmail(email, user.name, token)
+  } catch {
+    // silencioso
+  }
+
+  return { ok: true, data: { email } }
+}
+
+type ResetState = ApiResponse<null> | undefined
+
+export async function resetPasswordAction(
+  _prev: ResetState,
+  formData: FormData,
+): Promise<ResetState> {
+  const token = formData.get('token') as string
+  const parsed = ResetPasswordSchema.safeParse({ password: formData.get('password') })
+
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Contraseña inválida.' }
+  }
+
+  const record = await db.passwordResetToken.findUnique({ where: { token } })
+  if (!record || record.expires < new Date()) {
+    return { ok: false, error: 'El link es inválido o ya expiró.' }
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.password, 12)
+
+  await db.user.update({
+    where: { email: record.identifier },
+    data: { passwordHash },
+  })
+
+  await db.passwordResetToken.delete({ where: { token } })
+
+  return { ok: true, data: null }
 }

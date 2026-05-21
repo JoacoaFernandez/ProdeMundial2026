@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/register', '/verify', '/api/auth', '/api/cron', '/manifest.json', '/sw.js']
+const PUBLIC_PATHS = ['/login', '/register', '/verify', '/forgot-password', '/reset-password', '/api/auth', '/api/cron', '/manifest.json', '/sw.js']
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl

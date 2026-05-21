@@ -59,9 +59,10 @@ model User {
   predictions        Prediction[]
   memberships        RoomMember[]
   ownedRooms         Room[]              @relation("RoomOwner")
-  sessions           Session[]
-  accounts           Account[]
-  verificationTokens VerificationToken[]
+  sessions            Session[]
+  accounts            Account[]
+  verificationTokens  VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
 }
@@ -178,6 +179,17 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([identifier, token])
 }
 
 model VerificationToken {
