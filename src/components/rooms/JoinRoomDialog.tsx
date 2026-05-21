@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
-export function JoinRoomDialog() {
+export function JoinRoomDialog({ asInline = false }: { asInline?: boolean }) {
   const router = useRouter()
   const [code, setCode] = useState('')
   const [open, setOpen] = useState(false)
@@ -18,7 +18,7 @@ export function JoinRoomDialog() {
     e.preventDefault()
     const trimmed = code.trim().toUpperCase()
     if (trimmed.length !== 8) {
-      setError('El código debe tener 8 caracteres.')
+      setError('Código de 8 caracteres')
       return
     }
 
@@ -34,7 +34,6 @@ export function JoinRoomDialog() {
       }
       const room = await res.json()
 
-      // Join the room
       const joinRes = await fetch(`/api/rooms/${room.id}/join`, { method: 'POST' })
       const joinData = await joinRes.json()
 
@@ -55,6 +54,24 @@ export function JoinRoomDialog() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (asInline) {
+    return (
+      <form onSubmit={handleSubmit} className="flex gap-1.5 w-full" onClick={(e) => e.stopPropagation()}>
+        <Input
+          placeholder="XXXXXXXX"
+          value={code}
+          onChange={(e) => { setCode(e.target.value.toUpperCase()); setError('') }}
+          maxLength={8}
+          className="font-mono tracking-widest uppercase text-xs h-8 min-w-0"
+        />
+        <Button type="submit" size="sm" disabled={loading} className="h-8 shrink-0 text-xs px-3">
+          {loading ? '...' : 'Entrar'}
+        </Button>
+        {error && <p className="absolute text-xs text-destructive mt-9">{error}</p>}
+      </form>
+    )
   }
 
   return (

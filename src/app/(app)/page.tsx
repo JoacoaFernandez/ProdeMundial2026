@@ -1,29 +1,14 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { MatchCard } from '@/components/matches/MatchCard'
 import { AdBanner } from '@/components/shared/AdBanner'
+import { JoinRoomDialog } from '@/components/rooms/JoinRoomDialog'
+import { Plus, Users, Trophy, Target } from 'lucide-react'
 
 export default async function DashboardPage() {
   const session = await auth()
 
-  const [upcomingMatches, myRooms, myPredictionCount, activeMatchdayRow, userRow] = await Promise.all([
-    db.match.findMany({
-      where: {
-        status: { in: ['SCHEDULED', 'LIVE'] },
-        kickoff: { gte: new Date() },
-      },
-      include: {
-        homeTeam: true,
-        awayTeam: true,
-        predictions: {
-          where: { userId: session!.user.id },
-          select: { homeScore: true, awayScore: true, points: true, category: true },
-        },
-      },
-      orderBy: { kickoff: 'asc' },
-      take: 6,
-    }),
+  const [myRooms, myPredictionCount, myGlobalScore] = await Promise.all([
     db.roomMember.findMany({
       where: { userId: session!.user.id, status: 'APPROVED' },
       include: {
@@ -32,131 +17,126 @@ export default async function DashboardPage() {
         },
       },
       orderBy: { totalScore: 'desc' },
-      take: 3,
     }),
     db.prediction.count({ where: { userId: session!.user.id } }),
-    db.match.findFirst({
-      where: { status: { notIn: ['FINISHED', 'CANCELLED'] }, matchday: { not: null } },
-      orderBy: { matchday: 'asc' },
-      select: { matchday: true },
-    }),
-    db.user.findUnique({
-      where: { id: session!.user.id },
-      select: { timezone: true },
+    db.roomMember.findFirst({
+      where: {
+        userId: session!.user.id,
+        status: 'APPROVED',
+        room: { code: 'GLOBAL' },
+      },
+      select: { totalScore: true, exactCount: true },
     }),
   ])
 
-  const activeMatchday = activeMatchdayRow?.matchday ?? null
-  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
-
-  const topRoom = myRooms[0] ?? null
+  const privateRooms = myRooms.filter((m) => m.room.code !== 'GLOBAL')
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">¡Hola, {session!.user.name}!</h1>
-        <p className="text-muted-foreground">Bienvenido al PRODE Mundial FIFA 2026</p>
+        <h1 className="text-3xl font-bold tracking-tight">¡Hola, {session!.user.name?.split(' ')[0]}!</h1>
+        <p className="text-muted-foreground text-sm">PRODE Mundial FIFA 2026</p>
       </div>
 
-      {/* My rooms + stats */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Mis salas</h2>
-          <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
-            Ver todas →
-          </Link>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border bg-card p-3 text-center">
+          <p className="text-2xl font-bold">{myGlobalScore?.totalScore ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Puntos</p>
         </div>
-
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/predictions" className="rounded-lg border p-3 hover:shadow-md transition-shadow">
-            <p className="text-xs text-muted-foreground">Pronósticos cargados</p>
-            <p className="text-2xl font-bold mt-0.5">{myPredictionCount}</p>
-          </Link>
-          {topRoom ? (
-            <Link href={`/rooms/${topRoom.room.code}`} className="rounded-lg border p-3 hover:shadow-md transition-shadow">
-              <p className="text-xs text-muted-foreground">Mejor puntaje</p>
-              <p className="text-2xl font-bold mt-0.5">{topRoom.totalScore} pts</p>
-              <p className="text-xs text-muted-foreground truncate">{topRoom.room.name}</p>
-            </Link>
-          ) : (
-            <Link href="/rooms/new" className="rounded-lg border p-3 hover:shadow-md transition-shadow">
-              <p className="text-xs text-muted-foreground">Salas</p>
-              <p className="text-sm font-semibold mt-0.5 text-primary">Crear sala →</p>
-            </Link>
-          )}
+        <div className="rounded-xl border bg-card p-3 text-center">
+          <p className="text-2xl font-bold">{myGlobalScore?.exactCount ?? 0}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Exactos</p>
         </div>
+        <div className="rounded-xl border bg-card p-3 text-center">
+          <p className="text-2xl font-bold">{myPredictionCount}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Pronósticos</p>
+        </div>
+      </div>
 
-        {/* Room cards */}
-        {myRooms.length === 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link href="/rooms/new" className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-              <p className="font-semibold text-sm text-primary">Crear sala →</p>
-              <p className="text-xs text-muted-foreground mt-1">Invitá amigos a jugar</p>
-            </Link>
-            <Link href="/rooms" className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-              <p className="font-semibold text-sm text-primary">Unirse a una sala →</p>
-              <p className="text-xs text-muted-foreground mt-1">Ingresá con un código</p>
-            </Link>
+      {/* Actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/rooms/new"
+          className="group relative overflow-hidden rounded-2xl border border-primary/30 bg-primary/5 p-5 hover:bg-primary/10 hover:border-primary/50 transition-all"
+        >
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/15 mb-3">
+            <Plus className="size-5 text-primary" />
           </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-3">
-            {myRooms.map((m) => (
-              <Link key={m.room.id} href={`/rooms/${m.room.code}`}>
-                <div className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-                  <p className="font-semibold text-sm">{m.room.name}</p>
-                  <p className="text-xs font-mono text-muted-foreground">{m.room.code}</p>
-                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                    <span>{m.room._count.members} miembros</span>
-                    <span className="font-semibold text-foreground">{m.totalScore} pts</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <p className="font-bold text-primary">Crear sala</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-snug">
+            Armá tu grupo y competí con amigos
+          </p>
+        </Link>
+
+        <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:bg-muted/30 transition-all">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted mb-3">
+            <Users className="size-5 text-muted-foreground group-hover:text-foreground transition-colors" />
           </div>
-        )}
+          <p className="font-bold">Unirse a sala</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-snug mb-3">
+            Ingresá el código de tu grupo
+          </p>
+          <JoinRoomDialog asInline />
+        </div>
       </div>
 
       <AdBanner />
 
-      {/* Upcoming matches */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Próximos partidos</h2>
-          <Link href="/matches" className="text-sm text-muted-foreground hover:text-foreground">
-            Ver todos →
-          </Link>
-        </div>
-        {upcomingMatches.length === 0 ? (
-          <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-            Los fixtures estarán disponibles cuando comience el Mundial.
+      {/* My rooms */}
+      {privateRooms.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Mis salas</h2>
+            <Link href="/rooms" className="text-xs text-muted-foreground hover:text-foreground">
+              Ver todas →
+            </Link>
           </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {upcomingMatches.map((m) => (
-              <MatchCard
-                key={m.id}
-                id={m.id}
-                homeTeam={{ id: m.homeTeam.id, name: m.homeTeam.name, code: m.homeTeam.code, flagUrl: m.homeTeam.flagUrl }}
-                awayTeam={{ id: m.awayTeam.id, name: m.awayTeam.name, code: m.awayTeam.code, flagUrl: m.awayTeam.flagUrl }}
-                kickoff={m.kickoff.toISOString()}
-                lockAt={m.lockAt.toISOString()}
-                stage={m.stage}
-                group={m.homeTeam.group ?? null}
-                status={m.status}
-                homeScore={m.homeScore}
-                awayScore={m.awayScore}
-                matchday={m.matchday}
-                activeMatchday={activeMatchday}
-                timezone={timezone}
-                isLocked={new Date() >= m.lockAt}
-                myPrediction={m.predictions[0] ?? null}
-              />
+          <div className="space-y-2">
+            {privateRooms.map((m) => (
+              <Link
+                key={m.room.id}
+                href={`/rooms/${m.room.code}`}
+                className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 hover:bg-muted/30 transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{m.room.name}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{m.room.code} · {m.room._count.members} miembros</p>
+                </div>
+                <div className="text-right shrink-0 ml-4">
+                  <p className="font-bold text-primary">{m.totalScore} pts</p>
+                  <p className="text-xs text-muted-foreground">{m.exactCount} exactos</p>
+                </div>
+              </Link>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Quick links */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/ranking"
+          className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 hover:bg-muted/30 transition-colors"
+        >
+          <Trophy className="size-5 text-yellow-500 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Ranking global</p>
+            <p className="text-xs text-muted-foreground">Todos los jugadores</p>
+          </div>
+        </Link>
+        <Link
+          href="/predictions"
+          className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 hover:bg-muted/30 transition-colors"
+        >
+          <Target className="size-5 text-primary shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Mis pronósticos</p>
+            <p className="text-xs text-muted-foreground">{myPredictionCount} cargados</p>
+          </div>
+        </Link>
+      </div>
     </div>
   )
 }
