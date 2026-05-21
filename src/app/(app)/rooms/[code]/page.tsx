@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Leaderboard } from '@/components/rooms/Leaderboard'
+import { MatchdayPredictions } from '@/components/rooms/MatchdayPredictions'
 
 type Props = { params: Promise<{ code: string }> }
 
@@ -44,13 +45,43 @@ export default async function RoomPage({ params }: Props) {
     isMe: m.userId === session!.user.id,
   }))
 
-  // Pending members (only visible to owner/admin)
-  const pendingMembers = (isOwner || isAdmin)
-    ? await db.roomMember.findMany({
-        where: { roomId: room.id, status: 'PENDING' },
-        include: { user: { select: { id: true, name: true } } },
-      })
-    : []
+  const memberIds = room.members.map((m) => m.userId)
+
+  // Pending members (only visible to owner/admin) + matchday predictions
+  const [pendingMembers, matchdayMatches] = await Promise.all([
+    (isOwner || isAdmin)
+      ? db.roomMember.findMany({
+          where: { roomId: room.id, status: 'PENDING' },
+          include: { user: { select: { id: true, name: true } } },
+        })
+      : Promise.resolve([]),
+    db.match.findMany({
+      where: { matchday: { not: null } },
+      include: {
+        homeTeam: { select: { name: true, code: true } },
+        awayTeam: { select: { name: true, code: true } },
+        predictions: {
+          where: { userId: { in: memberIds } },
+          select: { userId: true, homeScore: true, awayScore: true, points: true, category: true },
+        },
+      },
+      orderBy: [{ matchday: 'asc' }, { kickoff: 'asc' }],
+    }),
+  ])
+
+  const matchdayData = matchdayMatches.map((m) => ({
+    id: m.id,
+    matchday: m.matchday!,
+    kickoff: m.kickoff.toISOString(),
+    homeTeam: { name: m.homeTeam.name, code: m.homeTeam.code },
+    awayTeam: { name: m.awayTeam.name, code: m.awayTeam.code },
+    homeScore: m.homeScore,
+    awayScore: m.awayScore,
+    status: m.status,
+    predictions: m.predictions,
+  }))
+
+  const membersData = room.members.map((m) => ({ userId: m.userId, name: m.user.name }))
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -109,6 +140,18 @@ export default async function RoomPage({ params }: Props) {
         <h2 className="font-semibold mb-3">Ranking</h2>
         <Leaderboard entries={leaderboard} />
       </div>
+
+      {/* Predicciones por jornada */}
+      {matchdayData.length > 0 && (
+        <div>
+          <h2 className="font-semibold mb-3">Pronósticos por jornada</h2>
+          <MatchdayPredictions
+            matches={matchdayData}
+            members={membersData}
+            myUserId={session!.user.id}
+          />
+        </div>
+      )}
     </div>
   )
 }

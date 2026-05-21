@@ -52,38 +52,40 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Bienvenido al PRODE Mundial FIFA 2026</p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <div className="rounded-lg border p-4">
-          <p className="text-xs text-muted-foreground">Mis salas</p>
-          <p className="text-2xl font-bold mt-1">{myRooms.length}</p>
+      {/* My rooms — primera sección */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Mis salas</h2>
+          <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
+            Ver todas →
+          </Link>
         </div>
-        <div className="rounded-lg border p-4">
-          <p className="text-xs text-muted-foreground">Pronósticos</p>
-          <p className="text-2xl font-bold mt-1">{myPredictionCount}</p>
-        </div>
-        {topRoom ? (
-          <>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Mejor sala</p>
-              <p className="text-sm font-semibold mt-1 truncate">{topRoom.room.name}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Puntos (mejor sala)</p>
-              <p className="text-2xl font-bold mt-1">{topRoom.totalScore}</p>
-            </div>
-          </>
-        ) : (
-          <>
+        {myRooms.length === 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
             <Link href="/rooms/new" className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-              <p className="text-xs text-muted-foreground">Salas</p>
-              <p className="text-sm font-semibold mt-1 text-primary">Crear sala →</p>
+              <p className="font-semibold text-sm text-primary">Crear sala →</p>
+              <p className="text-xs text-muted-foreground mt-1">Invitá amigos a jugar</p>
             </Link>
             <Link href="/rooms" className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-              <p className="text-xs text-muted-foreground">Salas</p>
-              <p className="text-sm font-semibold mt-1 text-primary">Unirse →</p>
+              <p className="font-semibold text-sm text-primary">Unirse a una sala →</p>
+              <p className="text-xs text-muted-foreground mt-1">Ingresá con un código</p>
             </Link>
-          </>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {myRooms.map((m) => (
+              <Link key={m.room.id} href={`/rooms/${m.room.code}`}>
+                <div className="rounded-lg border p-4 hover:shadow-md transition-shadow">
+                  <p className="font-semibold text-sm">{m.room.name}</p>
+                  <p className="text-xs font-mono text-muted-foreground">{m.room.code}</p>
+                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                    <span>{m.room._count.members} miembros</span>
+                    <span className="font-semibold text-foreground">{m.totalScore} pts</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
 
@@ -123,31 +125,24 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* My rooms */}
-      {myRooms.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Mis salas</h2>
-            <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
-              Ver todas →
-            </Link>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {myRooms.map((m) => (
-              <Link key={m.room.id} href={`/rooms/${m.room.code}`}>
-                <div className="rounded-lg border p-4 hover:shadow-md transition-shadow">
-                  <p className="font-semibold text-sm">{m.room.name}</p>
-                  <p className="text-xs font-mono text-muted-foreground">{m.room.code}</p>
-                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                    <span>{m.room._count.members} miembros</span>
-                    <span className="font-semibold text-foreground">{m.totalScore} pts</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+      {/* Stats row */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        <div className="rounded-lg border p-4">
+          <p className="text-xs text-muted-foreground">Mis salas</p>
+          <p className="text-2xl font-bold mt-1">{myRooms.length}</p>
         </div>
-      )}
+        <div className="rounded-lg border p-4">
+          <p className="text-xs text-muted-foreground">Pronósticos cargados</p>
+          <p className="text-2xl font-bold mt-1">{myPredictionCount}</p>
+        </div>
+        {topRoom && (
+          <div className="rounded-lg border p-4">
+            <p className="text-xs text-muted-foreground">Mejor puntaje</p>
+            <p className="text-2xl font-bold mt-1">{topRoom.totalScore} pts</p>
+            <p className="text-xs text-muted-foreground truncate">{topRoom.room.name}</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
