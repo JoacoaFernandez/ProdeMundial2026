@@ -1,7 +1,6 @@
 import NextAuth, { type DefaultSession } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
-import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { db } from './db'
 import { LoginSchema } from './validations/auth'
@@ -19,7 +18,6 @@ declare module 'next-auth' {
   }
 }
 
-// JWT augmentation through @auth/core
 declare module '@auth/core/jwt' {
   interface JWT {
     id: string
@@ -28,7 +26,6 @@ declare module '@auth/core/jwt' {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
@@ -83,12 +80,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        const email = user.email!
+        const name = user.name ?? email.split('@')[0]
+
+        let dbUser = await db.user.findUnique({
+          where: { email },
+          select: { id: true, role: true, emailVerified: true },
+        })
+
+        if (!dbUser) {
+          dbUser = await db.user.create({
+            data: { email, name, emailVerified: new Date(), passwordHash: null },
+            select: { id: true, role: true, emailVerified: true },
+          })
+        } else if (!dbUser.emailVerified) {
+          await db.user.update({
+            where: { id: dbUser.id },
+            data: { emailVerified: new Date() },
+          })
+        }
+
+        user.id = dbUser.id
+        user.role = dbUser.role
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string
         token.role = user.role
       }
-      // OAuth users may not have role in the token yet — fetch from DB
       if (token.id && !token.role) {
         const dbUser = await db.user.findUnique({
           where: { id: token.id },
