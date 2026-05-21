@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 type PredictionFormProps = {
   matchId: string
@@ -15,6 +13,39 @@ type PredictionFormProps = {
   onSaved?: (home: number, away: number) => void
 }
 
+function ScoreSelector({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+}) {
+  return (
+    <div className="flex-1 flex flex-col items-center gap-2">
+      <span className="text-sm font-medium text-muted-foreground text-center leading-tight">{label}</span>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, value - 1))}
+          className="w-10 h-10 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95"
+        >
+          −
+        </button>
+        <span className="text-4xl font-bold tabular-nums w-10 text-center">{value}</span>
+        <button
+          type="button"
+          onClick={() => onChange(value + 1)}
+          className="w-10 h-10 rounded-full border-2 text-xl font-bold flex items-center justify-center transition-colors hover:bg-muted active:scale-95"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function PredictionForm({
   matchId,
   homeTeamName,
@@ -24,22 +55,21 @@ export function PredictionForm({
   isLocked,
   onSaved,
 }: PredictionFormProps) {
-  const [homeScore, setHomeScore] = useState(initialHome !== undefined ? String(initialHome) : '')
-  const [awayScore, setAwayScore] = useState(initialAway !== undefined ? String(initialAway) : '')
+  const [homeScore, setHomeScore] = useState(initialHome ?? 0)
+  const [awayScore, setAwayScore] = useState(initialAway ?? 0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
+  function handleChange(setter: (v: number) => void) {
+    return (v: number) => {
+      setter(v)
+      setSaved(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const home = parseInt(homeScore, 10)
-    const away = parseInt(awayScore, 10)
-
-    if (isNaN(home) || isNaN(away) || home < 0 || away < 0) {
-      setError('Ingresá valores válidos (0 o más).')
-      return
-    }
-
     setLoading(true)
     setError('')
     setSaved(false)
@@ -48,7 +78,7 @@ export function PredictionForm({
       const res = await fetch('/api/predictions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId, homeScore: home, awayScore: away }),
+        body: JSON.stringify({ matchId, homeScore, awayScore }),
       })
 
       if (!res.ok) {
@@ -58,7 +88,7 @@ export function PredictionForm({
       }
 
       setSaved(true)
-      onSaved?.(home, away)
+      onSaved?.(homeScore, awayScore)
     } finally {
       setLoading(false)
     }
@@ -73,35 +103,11 @@ export function PredictionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="flex-1 space-y-1">
-          <Label htmlFor="home-score">{homeTeamName}</Label>
-          <Input
-            id="home-score"
-            type="number"
-            min={0}
-            max={99}
-            value={homeScore}
-            onChange={(e) => { setHomeScore(e.target.value); setSaved(false) }}
-            className="text-center text-2xl font-bold h-14"
-            placeholder="0"
-          />
-        </div>
-        <span className="text-2xl font-bold text-muted-foreground mt-6">–</span>
-        <div className="flex-1 space-y-1">
-          <Label htmlFor="away-score">{awayTeamName}</Label>
-          <Input
-            id="away-score"
-            type="number"
-            min={0}
-            max={99}
-            value={awayScore}
-            onChange={(e) => { setAwayScore(e.target.value); setSaved(false) }}
-            className="text-center text-2xl font-bold h-14"
-            placeholder="0"
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center gap-2">
+        <ScoreSelector label={homeTeamName} value={homeScore} onChange={handleChange(setHomeScore)} />
+        <span className="text-2xl font-bold text-muted-foreground mb-0 mt-6">–</span>
+        <ScoreSelector label={awayTeamName} value={awayScore} onChange={handleChange(setAwayScore)} />
       </div>
 
       {error && <p className="text-sm text-destructive text-center">{error}</p>}
