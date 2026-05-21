@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { MatchCard } from './MatchCard'
 
 type Match = {
@@ -29,99 +30,141 @@ type MatchListProps = {
   activeMatchday: number | null
 }
 
-const FILTER_OPTIONS = [
-  { label: 'Próximos', value: 'upcoming' },
-  { label: 'Todos', value: 'all' },
-  { label: 'Finalizados', value: 'finished' },
-] as const
+type Section = {
+  key: string
+  label: string
+  sublabel?: string
+  matches: Match[]
+  isActive: boolean
+}
 
-const STAGE_LABELS: Record<string, string> = {
-  GROUP: 'Fase de grupos',
-  R32: 'Ronda de 32',
-  R16: 'Octavos de final',
-  QF: 'Cuartos de final',
+const KNOCKOUT_ORDER = ['R32', 'R16', 'QF', 'SF', 'THIRD', 'FINAL']
+const KNOCKOUT_LABELS: Record<string, string> = {
+  R32: 'Dieciseisavos de Final',
+  R16: 'Octavos de Final',
+  QF: 'Cuartos de Final',
   SF: 'Semifinal',
   THIRD: 'Tercer puesto',
   FINAL: 'Final',
 }
 
-type Filter = (typeof FILTER_OPTIONS)[number]['value']
+function buildSections(matches: Match[], activeMatchday: number | null): Section[] {
+  const sections: Section[] = []
 
-function groupByDate(matches: Match[]): [string, Match[]][] {
-  const map = new Map<string, Match[]>()
-  for (const m of matches) {
-    const key = new Date(m.kickoff).toLocaleDateString('es-AR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      timeZone: 'America/Argentina/Buenos_Aires',
-    })
-    if (!map.has(key)) map.set(key, [])
-    map.get(key)!.push(m)
+  // Group stage sections by matchday
+  const groupMatches = matches.filter((m) => m.stage === 'GROUP')
+  const matchdayMap = new Map<number, Match[]>()
+  for (const m of groupMatches) {
+    const day = m.matchday ?? 0
+    if (!matchdayMap.has(day)) matchdayMap.set(day, [])
+    matchdayMap.get(day)!.push(m)
   }
-  return Array.from(map.entries())
+  const sortedMatchdays = Array.from(matchdayMap.keys()).sort((a, b) => a - b)
+  for (const day of sortedMatchdays) {
+    const ms = matchdayMap.get(day)!
+    const allFinished = ms.every((m) => m.status === 'FINISHED')
+    const hasLive = ms.some((m) => m.status === 'LIVE')
+    sections.push({
+      key: `group-${day}`,
+      label: `Fase de Grupos · Fecha ${day}`,
+      sublabel: hasLive ? 'En juego' : allFinished ? 'Finalizada' : undefined,
+      matches: ms,
+      isActive: day === activeMatchday,
+    })
+  }
+
+  // Knockout sections by stage
+  for (const stage of KNOCKOUT_ORDER) {
+    const ms = matches.filter((m) => m.stage === stage)
+    if (ms.length === 0) continue
+    const allFinished = ms.every((m) => m.status === 'FINISHED')
+    const hasLive = ms.some((m) => m.status === 'LIVE')
+    const hasUpcoming = ms.some((m) => m.status === 'SCHEDULED')
+    sections.push({
+      key: stage,
+      label: KNOCKOUT_LABELS[stage],
+      sublabel: hasLive ? 'En juego' : allFinished ? 'Finalizada' : hasUpcoming ? undefined : undefined,
+      matches: ms,
+      isActive: activeMatchday === null && hasUpcoming,
+    })
+  }
+
+  return sections
+}
+
+function MatchSection({
+  section,
+  activeMatchday,
+  defaultOpen,
+}: {
+  section: Section
+  activeMatchday: number | null
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  const predicted = section.matches.filter((m) => m.myPrediction).length
+  const total = section.matches.length
+  const allFinished = section.matches.every((m) => m.status === 'FINISHED')
+  const hasLive = section.matches.some((m) => m.status === 'LIVE')
+
+  return (
+    <div className="rounded-xl border border-border/60 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3.5 bg-card hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-left min-w-0">
+            <p className="font-semibold text-sm leading-tight">{section.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {hasLive ? (
+                <span className="text-green-400 font-medium">● En juego</span>
+              ) : allFinished ? (
+                <span>Finalizada · {predicted}/{total} pronosticados</span>
+              ) : (
+                <span>{predicted}/{total} pronosticados</span>
+              )}
+            </p>
+          </div>
+        </div>
+        <ChevronDown
+          className={`size-4 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <div className="border-t border-border/40 p-3 space-y-3 bg-background/50">
+          {section.matches.map((match) => (
+            <MatchCard key={match.id} {...match} activeMatchday={activeMatchday} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function MatchList({ matches, activeMatchday }: MatchListProps) {
-  const [filter, setFilter] = useState<Filter>('upcoming')
+  const sections = buildSections(matches, activeMatchday)
 
-  const filtered = matches.filter((m) => {
-    if (filter === 'upcoming') return m.status === 'SCHEDULED' || m.status === 'LIVE'
-    if (filter === 'finished') return m.status === 'FINISHED'
-    return true
-  })
-
-  const grouped = groupByDate(filtered)
+  if (sections.length === 0) {
+    return (
+      <div className="rounded-lg border p-12 text-center text-muted-foreground">
+        No hay partidos disponibles todavía.
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        {FILTER_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setFilter(opt.value)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === opt.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      {grouped.length === 0 ? (
-        <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-          No hay partidos en esta categoría.
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {grouped.map(([date, dayMatches]) => {
-            const stage = dayMatches[0].stage
-            const stageLabel = stage !== 'GROUP' ? STAGE_LABELS[stage] : null
-            return (
-              <div key={date}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-foreground capitalize">{date}</span>
-                    {stageLabel && (
-                      <span className="text-xs text-primary font-medium uppercase tracking-wide">{stageLabel}</span>
-                    )}
-                  </div>
-                  <div className="flex-1 h-px bg-border/50" />
-                  <span className="text-xs text-muted-foreground">{dayMatches.length} partido{dayMatches.length > 1 ? 's' : ''}</span>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {dayMatches.map((match) => (
-                    <MatchCard key={match.id} {...match} activeMatchday={activeMatchday} />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+    <div className="space-y-2">
+      {sections.map((section) => (
+        <MatchSection
+          key={section.key}
+          section={section}
+          activeMatchday={activeMatchday}
+          defaultOpen={section.isActive}
+        />
+      ))}
     </div>
   )
 }
