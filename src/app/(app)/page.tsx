@@ -52,14 +52,36 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">Bienvenido al PRODE Mundial FIFA 2026</p>
       </div>
 
-      {/* My rooms — primera sección */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
+      {/* My rooms + stats */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Mis salas</h2>
           <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
             Ver todas →
           </Link>
         </div>
+
+        {/* Quick stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link href="/predictions" className="rounded-lg border p-3 hover:shadow-md transition-shadow">
+            <p className="text-xs text-muted-foreground">Pronósticos cargados</p>
+            <p className="text-2xl font-bold mt-0.5">{myPredictionCount}</p>
+          </Link>
+          {topRoom ? (
+            <Link href={`/rooms/${topRoom.room.code}`} className="rounded-lg border p-3 hover:shadow-md transition-shadow">
+              <p className="text-xs text-muted-foreground">Mejor puntaje</p>
+              <p className="text-2xl font-bold mt-0.5">{topRoom.totalScore} pts</p>
+              <p className="text-xs text-muted-foreground truncate">{topRoom.room.name}</p>
+            </Link>
+          ) : (
+            <Link href="/rooms/new" className="rounded-lg border p-3 hover:shadow-md transition-shadow">
+              <p className="text-xs text-muted-foreground">Salas</p>
+              <p className="text-sm font-semibold mt-0.5 text-primary">Crear sala →</p>
+            </Link>
+          )}
+        </div>
+
+        {/* Room cards */}
         {myRooms.length === 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <Link href="/rooms/new" className="rounded-lg border p-4 hover:shadow-md transition-shadow">
@@ -126,24 +148,6 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Stats row */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
-        <div className="rounded-lg border p-4">
-          <p className="text-xs text-muted-foreground">Mis salas</p>
-          <p className="text-2xl font-bold mt-1">{myRooms.length}</p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <p className="text-xs text-muted-foreground">Pronósticos cargados</p>
-          <p className="text-2xl font-bold mt-1">{myPredictionCount}</p>
-        </div>
-        {topRoom && (
-          <div className="rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground">Mejor puntaje</p>
-            <p className="text-2xl font-bold mt-1">{topRoom.totalScore} pts</p>
-            <p className="text-xs text-muted-foreground truncate">{topRoom.room.name}</p>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
