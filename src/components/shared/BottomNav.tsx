@@ -15,7 +15,7 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t bg-background">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-card/95 backdrop-blur-sm rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
       <div className="grid grid-cols-5 h-16">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -24,11 +24,11 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center gap-0.5 text-xs transition-colors ${
-                active ? 'text-foreground' : 'text-muted-foreground'
+                active ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
               <Icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
-              <span>{label}</span>
+              <span className={active ? 'font-semibold' : ''}>{label}</span>
             </Link>
           )
         })}

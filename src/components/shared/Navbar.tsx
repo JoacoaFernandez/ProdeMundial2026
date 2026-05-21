@@ -19,37 +19,38 @@ export default function Navbar({ user }: NavbarProps) {
     : '?'
 
   return (
-    <header className="border-b">
+    <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-        <Link href="/" className="font-bold text-lg">
-          PRODE 2026
+        <Link href="/" className="font-[family-name:var(--font-anybody)] font-black uppercase tracking-tighter text-primary text-lg">
+          WC2026 PREDICTOR
         </Link>
 
         <nav className="hidden md:flex items-center gap-4">
-          <Link href="/matches" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/matches" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Partidos
           </Link>
-          <Link href="/rooms" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/rooms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Salas
           </Link>
-          <Link href="/ranking" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/ranking" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Ranking
           </Link>
           {user.role === 'ADMIN' && (
-            <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/admin" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               Admin
             </Link>
           )}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          <Avatar className="h-8 w-8 border border-primary/30">
+            <AvatarFallback className="text-xs bg-muted text-primary font-bold">{initials}</AvatarFallback>
           </Avatar>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => signOut({ callbackUrl: '/login' })}
+            className="text-muted-foreground hover:text-primary"
           >
             Salir
           </Button>
