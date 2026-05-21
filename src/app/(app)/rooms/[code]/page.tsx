@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Leaderboard } from '@/components/rooms/Leaderboard'
 import { MatchdayPredictions } from '@/components/rooms/MatchdayPredictions'
 import { ShareRoomButton } from '@/components/rooms/ShareRoomButton'
+import { AdBanner } from '@/components/shared/AdBanner'
 
 type Props = { params: Promise<{ code: string }> }
 
@@ -144,6 +145,8 @@ export default async function RoomPage({ params }: Props) {
         <h2 className="font-semibold mb-3">Ranking</h2>
         <Leaderboard entries={leaderboard} />
       </div>
+
+      <AdBanner />
 
       {/* Predicciones por jornada */}
       {matchdayData.length > 0 && (

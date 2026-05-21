@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { MatchCard } from '@/components/matches/MatchCard'
+import { AdBanner } from '@/components/shared/AdBanner'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -115,6 +116,8 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      <AdBanner />
 
       {/* Upcoming matches */}
       <div>

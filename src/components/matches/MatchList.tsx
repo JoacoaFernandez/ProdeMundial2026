@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { MatchCard } from './MatchCard'
+import { AdBanner } from '@/components/shared/AdBanner'
 
 type Match = {
   id: string
@@ -160,14 +161,17 @@ export function MatchList({ matches, activeMatchday, timezone }: MatchListProps)
 
   return (
     <div className="space-y-2">
-      {sections.map((section) => (
-        <MatchSection
-          key={section.key}
-          section={section}
-          activeMatchday={activeMatchday}
-          timezone={timezone}
-          defaultOpen={section.isActive}
-        />
+      {sections.map((section, i) => (
+        <>
+          <MatchSection
+            key={section.key}
+            section={section}
+            activeMatchday={activeMatchday}
+            timezone={timezone}
+            defaultOpen={section.isActive}
+          />
+          {(i === 2 || i === 5) && <AdBanner key={`ad-${i}`} className="my-1" />}
+        </>
       ))}
     </div>
   )
