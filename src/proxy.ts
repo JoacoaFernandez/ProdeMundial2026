@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/register', '/verify', '/api/auth', '/api/cron']
+const PUBLIC_PATHS = ['/login', '/register', '/verify', '/api/auth', '/api/cron', '/manifest.json', '/sw.js']
 
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl
@@ -23,5 +23,5 @@ export const proxy = auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|js)$).*)'],
 }
