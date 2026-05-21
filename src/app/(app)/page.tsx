@@ -112,6 +112,7 @@ export default async function DashboardPage() {
                 kickoff={m.kickoff.toISOString()}
                 lockAt={m.lockAt.toISOString()}
                 stage={m.stage}
+                group={m.homeTeam.group ?? null}
                 status={m.status}
                 homeScore={m.homeScore}
                 awayScore={m.awayScore}

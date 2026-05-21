@@ -108,7 +108,11 @@ export function MatchCard({
         <div className="p-4 space-y-4">
           {/* Stage + date */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{stage === 'GROUP' && group ? `Grupo ${group}` : (STAGE_LABELS[stage] ?? stage)}</span>
+            <span>
+              {stage === 'GROUP'
+                ? group ? `Fase de grupos · Grupo ${group}` : 'Fase de grupos'
+                : (STAGE_LABELS[stage] ?? stage)}
+            </span>
             <div className="flex items-center gap-1.5">
               {isLive ? (
                 <span className="flex items-center gap-1 font-semibold text-green-600">
