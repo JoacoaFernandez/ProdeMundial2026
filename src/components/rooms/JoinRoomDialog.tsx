@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Users } from 'lucide-react'
 
-export function JoinRoomDialog({ asInline = false }: { asInline?: boolean }) {
+export function JoinRoomDialog({ asInline = false, asCard = false }: { asInline?: boolean; asCard?: boolean }) {
   const router = useRouter()
   const [code, setCode] = useState('')
   const [open, setOpen] = useState(false)
@@ -54,6 +55,47 @@ export function JoinRoomDialog({ asInline = false }: { asInline?: boolean }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (asCard) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger render={
+          <button className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:bg-muted/30 transition-all text-left w-full h-full">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted mb-3">
+              <Users className="size-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
+            <p className="font-bold">Unirse a sala</p>
+            <p className="text-xs text-muted-foreground mt-1 leading-snug">
+              Ingresá el código de tu grupo
+            </p>
+          </button>
+        } />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unirse a una sala</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="room-code-card">Código de sala</Label>
+              <Input
+                id="room-code-card"
+                placeholder="XXXXXXXX"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                maxLength={8}
+                className="font-mono tracking-widest uppercase text-center text-lg"
+                autoFocus
+              />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Buscando...' : 'Unirse'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    )
   }
 
   if (asInline) {

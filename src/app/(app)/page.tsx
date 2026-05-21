@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import { AdBanner } from '@/components/shared/AdBanner'
 import { JoinRoomDialog } from '@/components/rooms/JoinRoomDialog'
-import { Plus, Users, Trophy, Target } from 'lucide-react'
+import { Plus, Trophy, Target } from 'lucide-react'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -70,16 +70,7 @@ export default async function DashboardPage() {
           </p>
         </Link>
 
-        <div className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 hover:border-primary/30 hover:bg-muted/30 transition-all">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted mb-3">
-            <Users className="size-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </div>
-          <p className="font-bold">Unirse a sala</p>
-          <p className="text-xs text-muted-foreground mt-1 leading-snug mb-3">
-            Ingresá el código de tu grupo
-          </p>
-          <JoinRoomDialog asInline />
-        </div>
+        <JoinRoomDialog asCard />
       </div>
 
       <AdBanner />
