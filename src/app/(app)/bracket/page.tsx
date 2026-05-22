@@ -185,7 +185,7 @@ export default async function BracketPage() {
                   }
                   const champ = champId === m.homeTeam?.id ? m.homeTeam : m.awayTeam
                   if (!champ) return null
-                  const flagUrl = getFlagUrl(champ.code, 32)
+                  const flagUrl = getFlagUrl(champ.code, 40)
                   return (
                     <div className="flex flex-col items-center gap-1 text-yellow-500">
                       {flagUrl && (
