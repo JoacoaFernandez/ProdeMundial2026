@@ -57,8 +57,8 @@ function MatchCard({ slot, match }: { slot: string; match?: DbMatch }) {
     ? { home: match.homeTeam?.name ?? match.homeSlotLabel ?? '?', away: match.awayTeam?.name ?? match.awaySlotLabel ?? '?' }
     : getSlotLabels(slot)
 
-  const homeFlagUrl = match?.homeTeam ? getFlagUrl(match.homeTeam.code, 20) : null
-  const awayFlagUrl = match?.awayTeam ? getFlagUrl(match.awayTeam.code, 20) : null
+  const homeFlagUrl = match?.homeTeam ? getFlagUrl(match.homeTeam.code, 40) : null
+  const awayFlagUrl = match?.awayTeam ? getFlagUrl(match.awayTeam.code, 40) : null
 
   let homeWon = false
   let awayWon = false
