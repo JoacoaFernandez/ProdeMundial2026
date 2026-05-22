@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { MatchCard } from './MatchCard'
+import { InlinePredictionCard } from './InlinePredictionCard'
 import { AdBanner } from '@/components/shared/AdBanner'
 
 type Match = {
@@ -151,6 +152,7 @@ function MatchSection({
 
 export function MatchList({ matches, activeMatchday, timezone, pendingOnly = false }: MatchListProps) {
   const sections = buildSections(matches, activeMatchday)
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   if (sections.length === 0) {
     return (
@@ -162,9 +164,12 @@ export function MatchList({ matches, activeMatchday, timezone, pendingOnly = fal
 
   if (pendingOnly) {
     const activeSection = sections.find((s) => s.isActive)
-    const unpredicted = activeSection
+    const unpredicted = (activeSection
       ? activeSection.matches.filter((m) => !m.myPrediction && !m.isLocked && m.status !== 'FINISHED' && m.status !== 'CANCELLED')
       : []
+    ).filter((m) => !savedIds.has(m.id))
+
+    const handleSaved = (id: string) => setSavedIds((prev: Set<string>) => new Set([...prev, id]))
 
     return (
       <div className="space-y-3">
@@ -185,12 +190,22 @@ export function MatchList({ matches, activeMatchday, timezone, pendingOnly = fal
         </div>
         {unpredicted.length === 0 ? (
           <div className="rounded-lg border p-8 text-center text-muted-foreground text-sm">
-            Ya predijiste todos los partidos de esta jornada.
+            Ya predijiste todos los partidos de esta jornada 🎉
           </div>
         ) : (
           <div className="space-y-3">
-            {unpredicted.map(({ id, ...rest }) => (
-              <MatchCard key={id} id={id} {...rest} activeMatchday={activeMatchday} timezone={timezone} fromPending />
+            {unpredicted.map((m) => (
+              <InlinePredictionCard
+                key={m.id}
+                id={m.id}
+                homeTeam={m.homeTeam}
+                awayTeam={m.awayTeam}
+                kickoff={m.kickoff}
+                stage={m.stage}
+                group={m.group}
+                timezone={timezone}
+                onSaved={handleSaved}
+              />
             ))}
           </div>
         )}
