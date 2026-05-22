@@ -30,6 +30,7 @@ type MatchListProps = {
   matches: Match[]
   activeMatchday: number | null
   timezone: string
+  pendingOnly?: boolean
 }
 
 type Section = {
@@ -148,13 +149,46 @@ function MatchSection({
   )
 }
 
-export function MatchList({ matches, activeMatchday, timezone }: MatchListProps) {
+export function MatchList({ matches, activeMatchday, timezone, pendingOnly = false }: MatchListProps) {
   const sections = buildSections(matches, activeMatchday)
 
   if (sections.length === 0) {
     return (
       <div className="rounded-lg border p-12 text-center text-muted-foreground">
         No hay partidos disponibles todavía.
+      </div>
+    )
+  }
+
+  if (pendingOnly) {
+    const activeSection = sections.find((s) => s.isActive)
+    const unpredicted = activeSection
+      ? activeSection.matches.filter((m) => !m.myPrediction && !m.isLocked && m.status !== 'FINISHED' && m.status !== 'CANCELLED')
+      : []
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-amber-500">
+            {unpredicted.length === 0
+              ? 'Todo predicho en esta jornada'
+              : `${unpredicted.length} sin predecir · ${activeSection?.label ?? ''}`}
+          </p>
+          <a href="/matches" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            Ver todos →
+          </a>
+        </div>
+        {unpredicted.length === 0 ? (
+          <div className="rounded-lg border p-8 text-center text-muted-foreground text-sm">
+            Ya predijiste todos los partidos de esta jornada.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {unpredicted.map(({ id, ...rest }) => (
+              <MatchCard key={id} id={id} {...rest} activeMatchday={activeMatchday} timezone={timezone} />
+            ))}
+          </div>
+        )}
       </div>
     )
   }

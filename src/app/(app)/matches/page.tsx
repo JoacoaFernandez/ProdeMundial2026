@@ -2,8 +2,14 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { MatchList } from '@/components/matches/MatchList'
 
-export default async function MatchesPage() {
+export default async function MatchesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pending?: string }>
+}) {
   const session = await auth()
+  const { pending } = await searchParams
+  const pendingOnly = pending === '1'
 
   const [matches, activeMatchdayRow, userRow] = await Promise.all([
     db.match.findMany({
@@ -63,7 +69,7 @@ export default async function MatchesPage() {
           No hay partidos disponibles todavía.
         </div>
       ) : (
-        <MatchList matches={serialized} activeMatchday={activeMatchday} timezone={timezone} />
+        <MatchList matches={serialized} activeMatchday={activeMatchday} timezone={timezone} pendingOnly={pendingOnly} />
       )}
     </div>
   )

@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const NAV_ITEMS = [
-  { href: '/',        label: 'Inicio',    icon: HomeIcon },
-  { href: '/grupos',  label: 'Grupos',    icon: TableIcon },
-  { href: '/matches', label: 'Partidos',  icon: CalendarIcon, badge: true },
-  { href: '/ranking', label: 'Ranking',   icon: TrophyIcon },
-  { href: '/rooms',   label: 'Salas',     icon: UsersIcon },
-  { href: '/profile', label: 'Perfil',    icon: UserIcon },
+const BASE_NAV_ITEMS = [
+  { href: '/',        label: 'Inicio',   icon: HomeIcon },
+  { href: '/grupos',  label: 'Grupos',   icon: TableIcon },
+  { href: '/matches', label: 'Partidos', icon: CalendarIcon, badge: true },
+  { href: '/ranking', label: 'Ranking',  icon: TrophyIcon },
+  { href: '/rooms',   label: 'Salas',    icon: UsersIcon },
+  { href: '/profile', label: 'Perfil',   icon: UserIcon },
 ]
 
 export default function BottomNav({ pendingCount = 0 }: { pendingCount?: number }) {
@@ -18,13 +18,14 @@ export default function BottomNav({ pendingCount = 0 }: { pendingCount?: number 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-card/95 backdrop-blur-sm rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
       <div className="grid grid-cols-6 h-16">
-        {NAV_ITEMS.map(({ href, label, icon: Icon, badge }) => {
+        {BASE_NAV_ITEMS.map(({ href, label, icon: Icon, badge }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
           const showBadge = badge && pendingCount > 0
+          const resolvedHref = showBadge ? '/matches?pending=1' : href
           return (
             <Link
               key={href}
-              href={href}
+              href={resolvedHref}
               className={`flex flex-col items-center justify-center gap-0.5 text-xs transition-colors ${
                 active ? 'text-primary' : 'text-muted-foreground'
               }`}

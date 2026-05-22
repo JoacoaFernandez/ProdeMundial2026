@@ -33,7 +33,10 @@ export default function Navbar({ user, pendingCount = 0 }: NavbarProps) {
           <Link href="/bracket" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Llaves
           </Link>
-          <Link href="/matches" className="relative text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+          <Link
+            href={pendingCount > 0 ? '/matches?pending=1' : '/matches'}
+            className="relative text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+          >
             Partidos
             {pendingCount > 0 && (
               <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white flex items-center justify-center leading-none">
