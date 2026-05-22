@@ -168,13 +168,18 @@ export function MatchList({ matches, activeMatchday, timezone, pendingOnly = fal
 
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-amber-500">
-            {unpredicted.length === 0
-              ? 'Todo predicho en esta jornada'
-              : `${unpredicted.length} sin predecir · ${activeSection?.label ?? ''}`}
-          </p>
-          <a href="/matches" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-500/70 mb-0.5">
+              {activeSection?.label ?? 'Jornada activa'}
+            </p>
+            <p className="text-base font-bold text-amber-500">
+              {unpredicted.length === 0
+                ? 'Todo predicho'
+                : `${unpredicted.length} ${unpredicted.length === 1 ? 'partido sin predecir' : 'partidos sin predecir'}`}
+            </p>
+          </div>
+          <a href="/matches" className="text-xs text-muted-foreground hover:text-primary transition-colors shrink-0 mt-1">
             Ver todos →
           </a>
         </div>
@@ -185,7 +190,7 @@ export function MatchList({ matches, activeMatchday, timezone, pendingOnly = fal
         ) : (
           <div className="space-y-3">
             {unpredicted.map(({ id, ...rest }) => (
-              <MatchCard key={id} id={id} {...rest} activeMatchday={activeMatchday} timezone={timezone} />
+              <MatchCard key={id} id={id} {...rest} activeMatchday={activeMatchday} timezone={timezone} fromPending />
             ))}
           </div>
         )}

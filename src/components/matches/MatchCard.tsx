@@ -26,6 +26,7 @@ type MatchCardProps = {
   timezone: string
   isLocked: boolean
   myPrediction: Prediction | null
+  fromPending?: boolean
 }
 
 const STAGE_LABELS: Record<string, string> = {
@@ -87,6 +88,7 @@ export function MatchCard({
   timezone,
   isLocked,
   myPrediction,
+  fromPending = false,
 }: MatchCardProps) {
   const kickoffDate = new Date(kickoff)
   const isFinished = status === 'FINISHED'
@@ -96,8 +98,10 @@ export function MatchCard({
   const cat = isScored && myPrediction?.category ? CATEGORY_STYLES[myPrediction.category] : null
   const isFutureMatchday = matchday !== null && activeMatchday !== null && matchday > activeMatchday
 
+  const href = fromPending ? `/matches/${id}?from=pending` : `/matches/${id}`
+
   return (
-    <Link href={`/matches/${id}`} className="block group">
+    <Link href={href} className="block group">
       <div className="rounded-xl border bg-card hover:shadow-lg transition-all duration-200 overflow-hidden">
         {/* Top bar — live indicator or category color */}
         <div className={cn(

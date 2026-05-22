@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { PredictionForm } from '@/components/matches/PredictionForm'
 import { getFlagUrl } from '@/lib/team-flags'
 
-type Props = { params: Promise<{ id: string }> }
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> }
 
 const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Fase de grupos',
@@ -35,9 +35,10 @@ const CATEGORY_INFO: Record<string, { label: string; color: string }> = {
   WRONG: { label: 'Incorrecto', color: 'text-red-500' },
 }
 
-export default async function MatchDetailPage({ params }: Props) {
+export default async function MatchDetailPage({ params, searchParams }: Props) {
   const session = await auth()
-  const { id } = await params
+  const [{ id }, { from }] = await Promise.all([params, searchParams])
+  const backHref = from === 'pending' ? '/matches?pending=1' : '/matches'
 
   const [match, activeMatchdayRow, userRow] = await Promise.all([
     db.match.findUnique({
@@ -75,7 +76,7 @@ export default async function MatchDetailPage({ params }: Props) {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/matches" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+        <Link href={backHref} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
           ← Partidos
         </Link>
       </div>
