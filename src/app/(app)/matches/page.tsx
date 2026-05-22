@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import { MatchList } from '@/components/matches/MatchList'
+import { LivePoller } from '@/components/matches/LivePoller'
 
 export default async function MatchesPage({
   searchParams,
@@ -37,6 +38,7 @@ export default async function MatchesPage({
 
   const activeMatchday = activeMatchdayRow?.matchday ?? null
   const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
+  const hasLive = matches.some((m) => m.status === 'LIVE')
 
   const serialized = matches.map((m) => ({
     id: m.id,
@@ -56,6 +58,7 @@ export default async function MatchesPage({
 
   return (
     <div className="space-y-6">
+      {hasLive && <LivePoller />}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Partidos</h1>
