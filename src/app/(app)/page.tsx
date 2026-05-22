@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     }),
     db.user.findUnique({
       where: { id: session!.user.id },
-      select: { name: true },
+      select: { name: true, timezone: true },
     }),
     db.match.findMany({
       where: {
@@ -57,6 +57,7 @@ export default async function DashboardPage() {
   ])
 
   const privateRooms = myRooms.filter((m) => m.room.code !== 'GLOBAL')
+  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -97,7 +98,7 @@ export default async function DashboardPage() {
                   const label = kickoff.toLocaleDateString('es-AR', {
                     weekday: 'short', day: 'numeric', month: 'short',
                     hour: '2-digit', minute: '2-digit',
-                    timeZone: 'America/Argentina/Buenos_Aires',
+                    timeZone: timezone,
                   })
                   return (
                     <p key={m.id} className="text-xs text-muted-foreground truncate">
