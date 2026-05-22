@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import Link from 'next/link'
 import { MatchList } from '@/components/matches/MatchList'
 
 export default async function MatchesPage({
@@ -55,13 +56,23 @@ export default async function MatchesPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Partidos</h1>
-        <p className="text-sm text-muted-foreground">
-          {serialized.length === 0
-            ? 'Los fixtures se cargarán cuando estén disponibles.'
-            : `${serialized.length} partidos`}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Partidos</h1>
+          <p className="text-sm text-muted-foreground">
+            {serialized.length === 0
+              ? 'Los fixtures se cargarán cuando estén disponibles.'
+              : `${serialized.length} partidos`}
+          </p>
+        </div>
+        {!pendingOnly && serialized.length > 0 && (
+          <Link
+            href="/matches?pending=1"
+            className="text-xs text-amber-500 hover:text-amber-400 transition-colors shrink-0 pt-1 font-medium"
+          >
+            Sin predecir →
+          </Link>
+        )}
       </div>
 
       {serialized.length === 0 ? (
