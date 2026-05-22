@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { db } from '@/lib/db'
 import Image from 'next/image'
 import { getFlagUrl } from '@/lib/team-flags'
@@ -114,9 +115,17 @@ export default async function GruposPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-8">
-      <div>
-        <h1 className="text-2xl font-bold">Grupos</h1>
-        <p className="text-sm text-muted-foreground">Clasifican los 2 primeros de cada grupo + los 8 mejores terceros</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Grupos</h1>
+          <p className="text-sm text-muted-foreground">Clasifican los 2 primeros de cada grupo + los 8 mejores terceros</p>
+        </div>
+        <Link
+          href="/bracket"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors shrink-0 pt-1"
+        >
+          Ver Llaves →
+        </Link>
       </div>
 
       {groups.length === 0 ? (

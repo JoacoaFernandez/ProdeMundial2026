@@ -29,6 +29,9 @@ export default function Navbar({ user }: NavbarProps) {
           <Link href="/grupos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Grupos
           </Link>
+          <Link href="/bracket" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            Llaves
+          </Link>
           <Link href="/matches" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Partidos
           </Link>
