@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { MatchCard } from './MatchCard'
 import { InlinePredictionCard } from './InlinePredictionCard'
@@ -153,6 +154,7 @@ function MatchSection({
 export function MatchList({ matches, activeMatchday, timezone, pendingOnly = false }: MatchListProps) {
   const sections = buildSections(matches, activeMatchday)
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const router = useRouter()
 
   if (sections.length === 0) {
     return (
@@ -169,7 +171,10 @@ export function MatchList({ matches, activeMatchday, timezone, pendingOnly = fal
       : []
     ).filter((m) => !savedIds.has(m.id))
 
-    const handleSaved = (id: string) => setSavedIds((prev: Set<string>) => new Set([...prev, id]))
+    const handleSaved = (id: string) => {
+      setSavedIds((prev: Set<string>) => new Set([...prev, id]))
+      router.refresh()
+    }
 
     return (
       <div className="space-y-3">
