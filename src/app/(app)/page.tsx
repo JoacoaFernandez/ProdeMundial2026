@@ -3,13 +3,12 @@ import { db } from '@/lib/db'
 import Link from 'next/link'
 import { AdBanner } from '@/components/shared/AdBanner'
 import { JoinRoomDialog } from '@/components/rooms/JoinRoomDialog'
-import { Plus, Trophy, Target, AlertCircle } from 'lucide-react'
+import { Plus, Trophy, Target } from 'lucide-react'
 
 export default async function DashboardPage() {
   const session = await auth()
-  const now = new Date()
 
-  const [myRooms, myPredictionCount, myGlobalScore, userRow, pendingMatches, pendingCount] = await Promise.all([
+  const [myRooms, myPredictionCount, myGlobalScore, userRow] = await Promise.all([
     db.roomMember.findMany({
       where: { userId: session!.user.id, status: 'APPROVED' },
       include: {
@@ -32,32 +31,9 @@ export default async function DashboardPage() {
       where: { id: session!.user.id },
       select: { name: true, timezone: true },
     }),
-    db.match.findMany({
-      where: {
-        status: { notIn: ['FINISHED', 'CANCELLED'] },
-        lockAt: { gt: now },
-        predictions: { none: { userId: session!.user.id } },
-      },
-      select: {
-        id: true,
-        kickoff: true,
-        homeTeam: { select: { name: true, code: true } },
-        awayTeam: { select: { name: true, code: true } },
-      },
-      orderBy: { kickoff: 'asc' },
-      take: 3,
-    }),
-    db.match.count({
-      where: {
-        status: { notIn: ['FINISHED', 'CANCELLED'] },
-        lockAt: { gt: now },
-        predictions: { none: { userId: session!.user.id } },
-      },
-    }),
   ])
 
   const privateRooms = myRooms.filter((m) => m.room.code !== 'GLOBAL')
-  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -82,40 +58,6 @@ export default async function DashboardPage() {
           <p className="text-xs text-muted-foreground mt-0.5">Pronósticos</p>
         </div>
       </div>
-
-      {/* Pending predictions */}
-      {pendingCount > 0 && (
-        <Link href="/matches" className="block rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 hover:bg-amber-500/10 transition-colors">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="size-5 text-amber-500 shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-amber-500">
-                {pendingCount === 1 ? '1 partido sin predecir' : `${pendingCount} partidos sin predecir`}
-              </p>
-              <div className="mt-2 space-y-1">
-                {pendingMatches.map((m) => {
-                  const kickoff = new Date(m.kickoff)
-                  const label = kickoff.toLocaleDateString('es-AR', {
-                    weekday: 'short', day: 'numeric', month: 'short',
-                    hour: '2-digit', minute: '2-digit',
-                    timeZone: timezone,
-                  })
-                  return (
-                    <p key={m.id} className="text-xs text-muted-foreground truncate">
-                      {m.homeTeam.name} vs {m.awayTeam.name}
-                      <span className="ml-1 text-amber-500/70">· {label}</span>
-                    </p>
-                  )
-                })}
-                {pendingCount > 3 && (
-                  <p className="text-xs text-muted-foreground">y {pendingCount - 3} más…</p>
-                )}
-              </div>
-            </div>
-            <span className="text-xs text-amber-500 font-medium shrink-0 mt-0.5">Predecir →</span>
-          </div>
-        </Link>
-      )}
 
       {/* Actions */}
       <div className="grid grid-cols-2 gap-3">

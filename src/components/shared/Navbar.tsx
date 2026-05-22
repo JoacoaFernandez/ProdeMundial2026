@@ -11,9 +11,10 @@ interface NavbarProps {
     email?: string | null
     role?: string
   }
+  pendingCount?: number
 }
 
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar({ user, pendingCount = 0 }: NavbarProps) {
   const initials = user.name
     ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '?'
@@ -32,8 +33,13 @@ export default function Navbar({ user }: NavbarProps) {
           <Link href="/bracket" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Llaves
           </Link>
-          <Link href="/matches" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+          <Link href="/matches" className="relative text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
             Partidos
+            {pendingCount > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-[10px] font-bold text-white flex items-center justify-center leading-none">
+                {pendingCount > 9 ? '9+' : pendingCount}
+              </span>
+            )}
           </Link>
           <Link href="/rooms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             Salas

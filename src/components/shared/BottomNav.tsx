@@ -6,20 +6,21 @@ import { usePathname } from 'next/navigation'
 const NAV_ITEMS = [
   { href: '/',        label: 'Inicio',    icon: HomeIcon },
   { href: '/grupos',  label: 'Grupos',    icon: TableIcon },
-  { href: '/matches', label: 'Partidos',  icon: CalendarIcon },
+  { href: '/matches', label: 'Partidos',  icon: CalendarIcon, badge: true },
   { href: '/ranking', label: 'Ranking',   icon: TrophyIcon },
   { href: '/rooms',   label: 'Salas',     icon: UsersIcon },
   { href: '/profile', label: 'Perfil',    icon: UserIcon },
 ]
 
-export default function BottomNav() {
+export default function BottomNav({ pendingCount = 0 }: { pendingCount?: number }) {
   const pathname = usePathname()
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-card/95 backdrop-blur-sm rounded-t-xl shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
       <div className="grid grid-cols-6 h-16">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {NAV_ITEMS.map(({ href, label, icon: Icon, badge }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+          const showBadge = badge && pendingCount > 0
           return (
             <Link
               key={href}
@@ -28,7 +29,14 @@ export default function BottomNav() {
                 active ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <Icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
+              <div className="relative">
+                <Icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
+                {showBadge && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-amber-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </div>
               <span className={active ? 'font-semibold' : ''}>{label}</span>
             </Link>
           )
