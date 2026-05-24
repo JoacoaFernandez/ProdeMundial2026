@@ -1,16 +1,8 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import Link from 'next/link'
-import { getFlagUrl } from '@/lib/team-flags'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
-
-const CATEGORY_STYLES: Record<string, { label: string; color: string; bar: string }> = {
-  EXACT:       { label: 'Exacto',      color: 'text-green-500',  bar: 'bg-green-500' },
-  WINNER_DIFF: { label: '+Diferencia', color: 'text-blue-500',   bar: 'bg-blue-500' },
-  WINNER_ONLY: { label: 'Ganador',     color: 'text-yellow-500', bar: 'bg-yellow-500' },
-  WRONG:       { label: 'Incorrecto',  color: 'text-red-400',    bar: 'bg-red-400' },
-}
+import { EditablePredictionRow } from '@/components/predictions/EditablePredictionRow'
 
 const STAGE_LABELS: Record<string, string> = {
   GROUP: 'Fase de grupos',
@@ -24,10 +16,9 @@ const STAGE_LABELS: Record<string, string> = {
 
 const GROUP_ORDER = ['GROUP', 'R32', 'R16', 'QF', 'SF', 'THIRD', 'FINAL']
 
-type GroupKey = { stage: string; matchday?: number | null }
-
 export default async function PredictionsPage() {
   const session = await auth()
+  const now = new Date()
 
   const predictions = await db.prediction.findMany({
     where: { userId: session!.user.id },
@@ -47,7 +38,7 @@ export default async function PredictionsPage() {
   const wrongCount = scored.filter((p) => p.category === 'WRONG').length
   const pendingCount = predictions.filter((p) => p.points === null).length
 
-  // Group predictions by stage+matchday
+  // Group by stage+matchday
   const groupMap = new Map<string, typeof predictions>()
   for (const pred of predictions) {
     const key = pred.match.stage === 'GROUP'
@@ -57,23 +48,17 @@ export default async function PredictionsPage() {
     groupMap.get(key)!.push(pred)
   }
 
-  // Sort groups: group stage matchdays first, then knockout order
   const sortedKeys = Array.from(groupMap.keys()).sort((a, b) => {
     const aIsGroup = a.startsWith('GROUP-')
     const bIsGroup = b.startsWith('GROUP-')
-    if (aIsGroup && bIsGroup) {
-      return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1])
-    }
+    if (aIsGroup && bIsGroup) return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1])
     if (aIsGroup) return -1
     if (bIsGroup) return 1
     return GROUP_ORDER.indexOf(a) - GROUP_ORDER.indexOf(b)
   })
 
   function groupLabel(key: string) {
-    if (key.startsWith('GROUP-')) {
-      const day = key.split('-')[1]
-      return `Fase de grupos · Fecha ${day}`
-    }
+    if (key.startsWith('GROUP-')) return `Fase de grupos · Fecha ${key.split('-')[1]}`
     return STAGE_LABELS[key] ?? key
   }
 
@@ -121,21 +106,11 @@ export default async function PredictionsPage() {
                   <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">Mal</p>
                 </div>
               </div>
-
-              {/* Bar breakdown */}
               <div className="flex h-2 rounded-full overflow-hidden gap-px">
-                {exactCount > 0 && (
-                  <div className="bg-green-500" style={{ flex: exactCount }} />
-                )}
-                {winnerDiffCount > 0 && (
-                  <div className="bg-blue-500" style={{ flex: winnerDiffCount }} />
-                )}
-                {winnerOnlyCount > 0 && (
-                  <div className="bg-yellow-500" style={{ flex: winnerOnlyCount }} />
-                )}
-                {wrongCount > 0 && (
-                  <div className="bg-red-400" style={{ flex: wrongCount }} />
-                )}
+                {exactCount > 0 && <div className="bg-green-500" style={{ flex: exactCount }} />}
+                {winnerDiffCount > 0 && <div className="bg-blue-500" style={{ flex: winnerDiffCount }} />}
+                {winnerOnlyCount > 0 && <div className="bg-yellow-500" style={{ flex: winnerOnlyCount }} />}
+                {wrongCount > 0 && <div className="bg-red-400" style={{ flex: wrongCount }} />}
               </div>
             </div>
           )}
@@ -166,54 +141,22 @@ export default async function PredictionsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  {preds.map((pred) => {
-                    const m = pred.match
-                    const isFinished = m.status === 'FINISHED'
-                    const cat = pred.category ? CATEGORY_STYLES[pred.category] : null
-                    const homeFlag = getFlagUrl(m.homeTeam.code, 80)
-                    const awayFlag = getFlagUrl(m.awayTeam.code, 80)
-
-                    return (
-                      <Link key={pred.id} href={`/matches/${m.id}`} className="block">
-                        <div className="rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
-                          {cat && <div className={cn('h-0.5', cat.bar)} />}
-                          <div className="px-4 py-3 flex items-center gap-3">
-                            {/* Teams */}
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <div className="relative w-7 h-5 rounded overflow-hidden border border-black/10 bg-muted shrink-0">
-                                {homeFlag && <Image src={homeFlag} alt={m.homeTeam.name} fill className="object-cover" unoptimized />}
-                              </div>
-                              <span className="text-xs font-bold shrink-0">{m.homeTeam.code}</span>
-                              <span className="text-[10px] text-muted-foreground shrink-0">vs</span>
-                              <span className="text-xs font-bold shrink-0">{m.awayTeam.code}</span>
-                              <div className="relative w-7 h-5 rounded overflow-hidden border border-black/10 bg-muted shrink-0">
-                                {awayFlag && <Image src={awayFlag} alt={m.awayTeam.name} fill className="object-cover" unoptimized />}
-                              </div>
-                            </div>
-
-                            {/* Scores + category */}
-                            <div className="flex items-center gap-3 shrink-0">
-                              {isFinished && (
-                                <span className="text-xs text-muted-foreground font-mono">
-                                  {m.homeScore}–{m.awayScore}
-                                </span>
-                              )}
-                              <span className="text-sm font-mono font-bold">
-                                {pred.homeScore}–{pred.awayScore}
-                              </span>
-                              {cat ? (
-                                <span className={cn('text-xs font-semibold w-[72px] text-right', cat.color)}>
-                                  {cat.label} {pred.points !== null ? `+${pred.points}` : ''}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-muted-foreground w-[72px] text-right">Pendiente</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })}
+                  {preds.map((pred) => (
+                    <EditablePredictionRow
+                      key={pred.id}
+                      matchId={pred.match.id}
+                      homeTeam={pred.match.homeTeam}
+                      awayTeam={pred.match.awayTeam}
+                      matchStatus={pred.match.status}
+                      matchHomeScore={pred.match.homeScore}
+                      matchAwayScore={pred.match.awayScore}
+                      isLocked={now >= pred.match.lockAt}
+                      predHomeScore={pred.homeScore}
+                      predAwayScore={pred.awayScore}
+                      points={pred.points}
+                      category={pred.category}
+                    />
+                  ))}
                 </div>
               </div>
             )
