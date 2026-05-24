@@ -30,22 +30,29 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;
-  const { title, body } = event.data.json();
+  const { title, body, url } = event.data.json();
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
       icon: '/icon-192.png',
       badge: '/icon-192.png',
+      data: { url: url || '/matches?pending=1' },
     })
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const url = event.notification.data?.url || '/matches?pending=1';
   event.waitUntil(
     clients.matchAll({ type: 'window' }).then((clientList) => {
-      if (clientList.length > 0) return clientList[0].focus();
-      return clients.openWindow('/');
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
     })
   );
 });

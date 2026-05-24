@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { sendPushToAll } from '@/lib/push'
+import { sendPushToUser } from '@/lib/push'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -9,7 +9,6 @@ export async function GET(request: Request) {
   }
 
   const now = new Date()
-  // Window: matches starting between 55 and 90 minutes from now
   const windowStart = new Date(now.getTime() + 55 * 60 * 1000)
   const windowEnd = new Date(now.getTime() + 90 * 60 * 1000)
 
@@ -20,8 +19,8 @@ export async function GET(request: Request) {
       notifiedAt: null,
     },
     include: {
-      homeTeam: { select: { code: true, name: true } },
-      awayTeam: { select: { code: true, name: true } },
+      homeTeam: { select: { code: true } },
+      awayTeam: { select: { code: true } },
     },
   })
 
@@ -31,18 +30,30 @@ export async function GET(request: Request) {
     const home = match.homeTeam.code
     const away = match.awayTeam.code
     const title = `${home} vs ${away} — en ~1 hora`
-    const body = '¡Hacé tu pronóstico antes de que cierre!'
+    const body = '¡Cerramos pronósticos pronto!'
+    const url = '/matches?pending=1'
 
-    try {
-      await sendPushToAll(title, body)
-      await db.match.update({
-        where: { id: match.id },
-        data: { notifiedAt: new Date() },
-      })
-      notified++
-    } catch (err) {
-      console.error(`[notify-upcoming] Error notifying for match ${match.id}:`, err)
-    }
+    // Only notify users who haven't predicted this match yet
+    const usersWithSubs = await db.pushSubscription.findMany({
+      where: {
+        user: {
+          predictions: { none: { matchId: match.id } },
+        },
+      },
+      select: { userId: true },
+      distinct: ['userId'],
+    })
+
+    await Promise.allSettled(
+      usersWithSubs.map(({ userId }) => sendPushToUser(userId, title, body, url))
+    )
+
+    await db.match.update({
+      where: { id: match.id },
+      data: { notifiedAt: new Date() },
+    })
+
+    notified++
   }
 
   return NextResponse.json({ ok: true, notified })

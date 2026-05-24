@@ -7,32 +7,14 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!,
 )
 
-export async function sendPushToUser(userId: string, title: string, body: string) {
+export async function sendPushToUser(userId: string, title: string, body: string, url = '/matches?pending=1') {
   const subs = await db.pushSubscription.findMany({ where: { userId } })
 
   await Promise.allSettled(
     subs.map((sub) =>
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify({ title, body }),
-      ).catch(async (err) => {
-        // Suscripción expirada — la borramos
-        if (err.statusCode === 410) {
-          await db.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
-        }
-      })
-    )
-  )
-}
-
-export async function sendPushToAll(title: string, body: string) {
-  const subs = await db.pushSubscription.findMany()
-
-  await Promise.allSettled(
-    subs.map((sub) =>
-      webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify({ title, body }),
+        JSON.stringify({ title, body, url }),
       ).catch(async (err) => {
         if (err.statusCode === 410) {
           await db.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
