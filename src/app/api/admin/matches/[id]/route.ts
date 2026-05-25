@@ -61,11 +61,17 @@ export async function PATCH(req: Request, { params }: Context) {
 
       const prev = await tx.prediction.findUnique({ where: { id: pred.id } })
       const prevPoints = prev?.points ?? 0
+      const prevCategory = prev?.category ?? null
 
       await tx.prediction.update({
         where: { id: pred.id },
         data: { points, category },
       })
+
+      const exactDelta =
+        category === 'EXACT' && prevCategory !== 'EXACT' ? 1
+        : category !== 'EXACT' && prevCategory === 'EXACT' ? -1
+        : 0
 
       // Update the denormalized score on every room membership for this user
       const memberships = await tx.roomMember.findMany({
@@ -77,7 +83,7 @@ export async function PATCH(req: Request, { params }: Context) {
           where: { id: member.id },
           data: {
             totalScore: { increment: points - prevPoints },
-            exactCount: category === 'EXACT' ? { increment: 1 } : undefined,
+            ...(exactDelta !== 0 ? { exactCount: { increment: exactDelta } } : {}),
           },
         })
       }

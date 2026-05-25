@@ -1,8 +1,15 @@
-const CACHE_NAME = 'prode2026-v1';
+const CACHE_NAME = 'prode2026-v2';
+const STATIC_ASSETS = ['/prode.png', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(['/prode.png']))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all([
+        cache.addAll(STATIC_ASSETS),
+        // Pre-cache the offline page so it's available without network
+        fetch('/offline').then((r) => cache.put('/offline', r)).catch(() => {}),
+      ])
+    )
   );
   self.skipWaiting();
 });
@@ -20,10 +27,54 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip non-same-origin and API requests
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api')) return;
 
+  // Next.js static assets are content-hashed → cache-first forever
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ??
+          fetch(request).then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // Images: cache-first
+  if (request.destination === 'image') {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ??
+          fetch(request).then((response) => {
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // Navigation: network-first, fallback to cached /offline
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => Response.redirect('/')));
+    event.respondWith(
+      fetch(request).catch(() =>
+        caches.match('/offline').then(
+          (r) => r ?? new Response('<h1>Sin conexión</h1>', { headers: { 'Content-Type': 'text/html' } })
+        )
+      )
+    );
     return;
   }
 });
