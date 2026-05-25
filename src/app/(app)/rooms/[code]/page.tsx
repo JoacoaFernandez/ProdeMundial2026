@@ -193,10 +193,16 @@ function ApproveButton({
     'use server'
     const { db: prisma } = await import('@/lib/db')
 
-    if (action === 'approve') {
-      const member = await prisma.roomMember.findUnique({ where: { id: memberId } })
-      if (!member) return
+    const [member, room] = await Promise.all([
+      prisma.roomMember.findUnique({
+        where: { id: memberId },
+        include: { user: { select: { email: true, name: true } } },
+      }),
+      prisma.room.findUnique({ where: { id: roomId }, select: { name: true, code: true } }),
+    ])
+    if (!member || !room) return
 
+    if (action === 'approve') {
       const scored = await prisma.prediction.findMany({
         where: { userId: member.userId, points: { not: null } },
         select: { points: true, category: true },
@@ -209,14 +215,24 @@ function ApproveButton({
         data: { status: 'APPROVED', totalScore, exactCount },
       })
 
-      const room = await prisma.room.findUnique({ where: { id: roomId }, select: { name: true } })
       const { sendPushToUser } = await import('@/lib/push')
-      sendPushToUser(member.userId, '✅ Solicitud aprobada', `Ya sos parte de "${room?.name ?? 'la sala'}"`).catch(() => {})
+      const { sendRoomApprovalEmail } = await import('@/lib/email')
+      sendPushToUser(member.userId, '✅ Solicitud aprobada', `Ya sos parte de "${room.name}"`).catch(() => {})
+      if (member.user.email) {
+        sendRoomApprovalEmail(member.user.email, member.user.name ?? '', room.name, room.code).catch(() => {})
+      }
     } else {
       await prisma.roomMember.update({
         where: { id: memberId },
         data: { status: 'REJECTED' },
       })
+
+      const { sendPushToUser } = await import('@/lib/push')
+      const { sendRoomRejectionEmail } = await import('@/lib/email')
+      sendPushToUser(member.userId, '❌ Solicitud rechazada', `Tu solicitud para "${room.name}" no fue aprobada.`).catch(() => {})
+      if (member.user.email) {
+        sendRoomRejectionEmail(member.user.email, member.user.name ?? '', room.name).catch(() => {})
+      }
     }
 
     const { revalidatePath } = await import('next/cache')

@@ -30,6 +30,40 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
   })
 }
 
+export async function sendRoomApprovalEmail(email: string, name: string, roomName: string, roomCode: string) {
+  const roomUrl = `${process.env.NEXT_PUBLIC_APP_URL}/rooms/${roomCode}`
+
+  await transporter.sendMail({
+    from: `"PRODE Mundial 2026" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: `✅ Solicitud aprobada — ${roomName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#111">¡Hola, ${name}!</h2>
+        <p>Tu solicitud para unirte a <strong>${roomName}</strong> fue aprobada.</p>
+        <a href="${roomUrl}" style="display:inline-block;margin:16px 0;padding:12px 24px;background:#84cc16;color:#000;border-radius:8px;text-decoration:none;font-weight:bold;">
+          Ir a la sala
+        </a>
+      </div>
+    `,
+  })
+}
+
+export async function sendRoomRejectionEmail(email: string, name: string, roomName: string) {
+  await transporter.sendMail({
+    from: `"PRODE Mundial 2026" <${process.env.GMAIL_USER}>`,
+    to: email,
+    subject: `Solicitud rechazada — ${roomName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+        <h2 style="color:#111">Hola, ${name}.</h2>
+        <p>Tu solicitud para unirte a <strong>${roomName}</strong> fue rechazada por el dueño de la sala.</p>
+        <p style="color:#666;font-size:13px;">Podés intentar unirte a otra sala o crear la tuya.</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendVerificationEmail(email: string, name: string, token: string) {
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${token}`
 
