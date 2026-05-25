@@ -50,7 +50,7 @@ export default async function RoomPage({ params }: Props) {
   const memberIds = room.members.map((m) => m.userId)
 
   // Pending members (only visible to owner/admin) + matchday predictions
-  const [pendingMembers, matchdayMatches] = await Promise.all([
+  const [pendingMembers, matchdayMatches, userRow] = await Promise.all([
     (isOwner || isAdmin)
       ? db.roomMember.findMany({
           where: { roomId: room.id, status: 'PENDING' },
@@ -69,6 +69,7 @@ export default async function RoomPage({ params }: Props) {
       },
       orderBy: [{ matchday: 'asc' }, { kickoff: 'asc' }],
     }),
+    db.user.findUnique({ where: { id: session!.user.id }, select: { timezone: true } }),
   ])
 
   const matchdayData = matchdayMatches.map((m) => ({
@@ -83,6 +84,7 @@ export default async function RoomPage({ params }: Props) {
     predictions: m.predictions,
   }))
 
+  const timezone = userRow?.timezone ?? 'America/Argentina/Buenos_Aires'
   const membersData = room.members.map((m) => ({ userId: m.userId, name: m.user.name }))
 
   return (
@@ -156,6 +158,7 @@ export default async function RoomPage({ params }: Props) {
             matches={matchdayData}
             members={membersData}
             myUserId={session!.user.id}
+            timezone={timezone}
           />
         </div>
       )}
@@ -189,10 +192,33 @@ function ApproveButton({
   async function handleAction() {
     'use server'
     const { db: prisma } = await import('@/lib/db')
-    await prisma.roomMember.update({
-      where: { id: memberId },
-      data: { status: action === 'approve' ? 'APPROVED' : 'REJECTED' },
-    })
+
+    if (action === 'approve') {
+      const member = await prisma.roomMember.findUnique({ where: { id: memberId } })
+      if (!member) return
+
+      const scored = await prisma.prediction.findMany({
+        where: { userId: member.userId, points: { not: null } },
+        select: { points: true, category: true },
+      })
+      const totalScore = scored.reduce((sum, p) => sum + (p.points ?? 0), 0)
+      const exactCount = scored.filter((p) => p.category === 'EXACT').length
+
+      await prisma.roomMember.update({
+        where: { id: memberId },
+        data: { status: 'APPROVED', totalScore, exactCount },
+      })
+
+      const room = await prisma.room.findUnique({ where: { id: roomId }, select: { name: true } })
+      const { sendPushToUser } = await import('@/lib/push')
+      sendPushToUser(member.userId, '✅ Solicitud aprobada', `Ya sos parte de "${room?.name ?? 'la sala'}"`).catch(() => {})
+    } else {
+      await prisma.roomMember.update({
+        where: { id: memberId },
+        data: { status: 'REJECTED' },
+      })
+    }
+
     const { revalidatePath } = await import('next/cache')
     revalidatePath(`/rooms/[code]`, 'page')
   }

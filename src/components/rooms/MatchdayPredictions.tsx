@@ -30,6 +30,7 @@ type Props = {
   matches: MatchRow[]
   members: Member[]
   myUserId: string
+  timezone?: string
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -39,7 +40,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   WRONG: 'text-red-400',
 }
 
-export function MatchdayPredictions({ matches, members, myUserId }: Props) {
+export function MatchdayPredictions({ matches, members, myUserId, timezone = 'America/Argentina/Buenos_Aires' }: Props) {
   const matchdays = Array.from(new Set(matches.map((m) => m.matchday))).sort((a, b) => a - b)
   const [selected, setSelected] = useState(matchdays[0] ?? 1)
 
@@ -83,9 +84,9 @@ export function MatchdayPredictions({ matches, members, myUserId }: Props) {
                     </span>
                   ) : (
                     <span>
-                      {new Date(match.kickoff).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                      {new Date(match.kickoff).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: timezone })}
                       {' · '}
-                      {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(match.kickoff).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: timezone })}
                     </span>
                   )}
                 </div>
