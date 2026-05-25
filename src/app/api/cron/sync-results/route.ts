@@ -2,6 +2,15 @@ import { db } from '@/lib/db'
 import { fetchTodayFixtures, mapStatusToMatchStatus } from '@/lib/football-api'
 import { calculatePoints } from '@/lib/scoring'
 import { sendPushToUser } from '@/lib/push'
+import {
+  generateR32,
+  generateR16,
+  generateQF,
+  generateSF,
+  generateFinalAndThird,
+  isGroupStageComplete,
+  isRoundComplete,
+} from '@/lib/generate-knockout'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -102,6 +111,15 @@ export async function GET(request: Request) {
 
       scored++
     }
+  }
+
+  // Auto-generate next knockout round when a stage completes
+  if (scored > 0) {
+    if (await isGroupStageComplete()) await generateR32().catch(() => {})
+    if (await isRoundComplete('R32')) await generateR16().catch(() => {})
+    if (await isRoundComplete('R16')) await generateQF().catch(() => {})
+    if (await isRoundComplete('QF')) await generateSF().catch(() => {})
+    if (await isRoundComplete('SF')) await generateFinalAndThird().catch(() => {})
   }
 
   return NextResponse.json({ ok: true, updated, scored })
