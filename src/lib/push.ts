@@ -7,19 +7,24 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!,
 )
 
+async function sendToSub(sub: { endpoint: string; p256dh: string; auth: string }, payload: string) {
+  return webpush
+    .sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload)
+    .catch(async (err: { statusCode?: number }) => {
+      if (err.statusCode === 410) {
+        await db.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
+      }
+    })
+}
+
 export async function sendPushToUser(userId: string, title: string, body: string, url = '/matches?pending=1') {
   const subs = await db.pushSubscription.findMany({ where: { userId } })
+  const payload = JSON.stringify({ title, body, url })
+  await Promise.allSettled(subs.map((sub) => sendToSub(sub, payload)))
+}
 
-  await Promise.allSettled(
-    subs.map((sub) =>
-      webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify({ title, body, url }),
-      ).catch(async (err) => {
-        if (err.statusCode === 410) {
-          await db.pushSubscription.delete({ where: { endpoint: sub.endpoint } })
-        }
-      })
-    )
-  )
+export async function broadcastPush(title: string, body: string, url = '/matches') {
+  const subs = await db.pushSubscription.findMany()
+  const payload = JSON.stringify({ title, body, url })
+  await Promise.allSettled(subs.map((sub) => sendToSub(sub, payload)))
 }

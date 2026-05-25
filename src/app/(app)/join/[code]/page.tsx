@@ -33,11 +33,17 @@ export default async function JoinPage({ params }: Props) {
     'use server'
     const { auth: getAuth } = await import('@/lib/auth')
     const { db: prisma } = await import('@/lib/db')
+    const { redirect: nav } = await import('next/navigation')
     const s = await getAuth()
     if (!s) return
 
-    const r = await prisma.room.findUnique({ where: { code: code.toUpperCase() } })
+    const r = await prisma.room.findUnique({
+      where: { code: code.toUpperCase() },
+      include: { _count: { select: { members: { where: { status: 'APPROVED' } } } } },
+    })
     if (!r) return
+
+    if (r.maxMembers && r._count.members >= r.maxMembers) return
 
     const exists = await prisma.roomMember.findUnique({
       where: { userId_roomId: { userId: s.user.id, roomId: r.id } },
@@ -45,20 +51,37 @@ export default async function JoinPage({ params }: Props) {
 
     if (exists?.status === 'REJECTED') {
       await prisma.roomMember.delete({ where: { id: exists.id } })
+    } else if (exists) {
+      nav(exists.status === 'APPROVED' ? `/rooms/${code}` : '/rooms')
+      return
     }
 
-    if (!exists || exists.status === 'REJECTED') {
-      await prisma.roomMember.create({
-        data: {
-          userId: s.user.id,
-          roomId: r.id,
-          status: r.requireApproval ? 'PENDING' : 'APPROVED',
-        },
+    const status = r.requireApproval ? 'PENDING' : 'APPROVED'
+
+    let totalScore = 0
+    let exactCount = 0
+    if (status === 'APPROVED') {
+      const scored = await prisma.prediction.findMany({
+        where: { userId: s.user.id, points: { not: null } },
+        select: { points: true, category: true },
       })
+      totalScore = scored.reduce((sum, p) => sum + (p.points ?? 0), 0)
+      exactCount = scored.filter((p) => p.category === 'EXACT').length
     }
 
-    const { redirect: nav } = await import('next/navigation')
-    nav(r.requireApproval ? '/rooms' : `/rooms/${code}`)
+    await prisma.roomMember.create({
+      data: { userId: s.user.id, roomId: r.id, status, totalScore, exactCount },
+    })
+
+    const joinerName = s.user.name ?? 'Alguien'
+    const { sendPushToUser } = await import('@/lib/push')
+    if (status === 'APPROVED') {
+      sendPushToUser(r.ownerId, `${joinerName} se unió a ${r.name}`, '¡Nuevo miembro en tu sala!').catch(() => {})
+    } else {
+      sendPushToUser(r.ownerId, `Nueva solicitud en ${r.name}`, `${joinerName} quiere unirse. Aprobalo desde la sala.`).catch(() => {})
+    }
+
+    nav(status === 'APPROVED' ? `/rooms/${code}` : '/rooms')
   }
 
   return (

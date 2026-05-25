@@ -11,6 +11,7 @@ import {
   isGroupStageComplete,
   isRoundComplete,
 } from '@/lib/generate-knockout'
+import { broadcastPush } from '@/lib/push'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -115,11 +116,21 @@ export async function GET(request: Request) {
 
   // Auto-generate next knockout round when a stage completes
   if (scored > 0) {
-    if (await isGroupStageComplete()) await generateR32().catch(() => {})
-    if (await isRoundComplete('R32')) await generateR16().catch(() => {})
-    if (await isRoundComplete('R16')) await generateQF().catch(() => {})
-    if (await isRoundComplete('QF')) await generateSF().catch(() => {})
-    if (await isRoundComplete('SF')) await generateFinalAndThird().catch(() => {})
+    const roundChecks: Array<[() => Promise<boolean>, () => Promise<{ created: number }>, string, string]> = [
+      [isGroupStageComplete, generateR32, '🏆 Ronda de 32 disponible', '¡Hacé tus pronósticos para el Ronda de 32!'],
+      [() => isRoundComplete('R32'), generateR16, '⚽ Octavos de final disponibles', '¡Hacé tus pronósticos para Octavos!'],
+      [() => isRoundComplete('R16'), generateQF, '⚽ Cuartos de final disponibles', '¡Hacé tus pronósticos para Cuartos!'],
+      [() => isRoundComplete('QF'), generateSF, '⚽ Semifinales disponibles', '¡Hacé tus pronósticos para las Semifinales!'],
+      [() => isRoundComplete('SF'), generateFinalAndThird, '🏆 Final y 3er puesto disponibles', '¡Hacé tus pronósticos para la Final!'],
+    ]
+    for (const [check, generate, title, body] of roundChecks) {
+      if (await check()) {
+        const result = await generate().catch(() => ({ created: 0 }))
+        if (result.created > 0) {
+          broadcastPush(title, body, '/matches').catch(() => {})
+        }
+      }
+    }
   }
 
   return NextResponse.json({ ok: true, updated, scored })
