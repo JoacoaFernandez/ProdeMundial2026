@@ -18,6 +18,12 @@ export default async function RoomSettingsPage({ params }: Props) {
   if (!room) notFound()
   if (room.ownerId !== session!.user.id && session!.user.role !== 'ADMIN') redirect(`/rooms/${code}`)
 
+  const members = await db.roomMember.findMany({
+    where: { roomId: room.id, status: 'APPROVED', userId: { not: session!.user.id } },
+    include: { user: { select: { id: true, name: true } } },
+    orderBy: { totalScore: 'desc' },
+  })
+
   async function updateRoom(formData: FormData) {
     'use server'
     const name = (formData.get('name') as string).trim()
@@ -104,6 +110,50 @@ export default async function RoomSettingsPage({ params }: Props) {
           </form>
         </CardContent>
       </Card>
+
+      {members.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Miembros ({members.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y">
+              {members.map((m) => (
+                <li key={m.id} className="flex items-center justify-between px-6 py-3">
+                  <div>
+                    <p className="text-sm font-medium">{m.user.name}</p>
+                    <p className="text-xs text-muted-foreground">{m.totalScore} pts · {m.exactCount} exactos</p>
+                  </div>
+                  <KickMemberButton memberId={m.id} name={m.user.name} code={code} />
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
+  )
+}
+
+function KickMemberButton({ memberId, name, code }: { memberId: string; name: string; code: string }) {
+  async function kickMember() {
+    'use server'
+    const { db: prisma } = await import('@/lib/db')
+    await prisma.roomMember.delete({ where: { id: memberId } })
+    const { revalidatePath } = await import('next/cache')
+    revalidatePath(`/rooms/${code}/settings`)
+    revalidatePath(`/rooms/${code}`)
+  }
+
+  return (
+    <form action={kickMember}>
+      <button
+        type="submit"
+        className="text-xs px-3 py-1 rounded border border-red-400 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium transition-colors"
+        aria-label={`Expulsar a ${name}`}
+      >
+        Expulsar
+      </button>
+    </form>
   )
 }

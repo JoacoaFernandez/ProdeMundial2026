@@ -40,6 +40,7 @@ export default async function RoomsPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <Link href="/rooms/explore" className={buttonVariants({ variant: 'outline' })}>Explorar</Link>
           <JoinRoomDialog />
           <Link href="/rooms/new" className={buttonVariants()}>Nueva sala</Link>
         </div>
